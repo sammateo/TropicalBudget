@@ -22,12 +22,29 @@ namespace TestMVC.Services
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype,
                     transaction_date as transactiondate, category_id AS categoryid, 
-                    source_id as sourceid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
+                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
                     FROM transactions t
                     LEFT JOIN transaction_category tc ON t.category_id = tc.id
                     LEFT JOIN transaction_source ts ON t.source_id = ts.id
                     LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id";
             users = (await conn.QueryAsync<Transaction>(query)).ToList();
+            return users;
+        }
+        
+        public async Task<Transaction> GetTransaction(Guid transaction_id)
+        {
+            var users = new Transaction();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype,
+                    transaction_date as transactiondate, category_id AS categoryid, 
+                    source_id as sourceid,tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
+                    FROM transactions t
+                    LEFT JOIN transaction_category tc ON t.category_id = tc.id
+                    LEFT JOIN transaction_source ts ON t.source_id = ts.id
+                    LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
+                    WHERE t.id = @transaction_id";
+            users = (await conn.QueryAsync<Transaction>(query, new { transaction_id })).SingleOrDefault();
             return users;
         }
 
@@ -47,6 +64,30 @@ namespace TestMVC.Services
                 category_id = transaction.CategoryID,
                 source_id = transaction.SourceID,
                 transaction_type_id = transaction.TransactionTypeID
+            }
+                ));
+        }
+        public async Task UpdateTransaction(Transaction transaction)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"UPDATE transactions 
+                SET amount = @amount,
+                    note = @note,
+                    transaction_date = @transaction_date,
+                    category_id = @category_id,
+                    source_id = @source_id,
+                    transaction_type_id = @transaction_type_id
+                    WHERE ID = @ID";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                amount = transaction.Amount,
+                note = transaction.Note,
+                transaction_date = transaction.TransactionDate,
+                category_id = transaction.CategoryID,
+                source_id = transaction.SourceID,
+                transaction_type_id = transaction.TransactionTypeID,
+                ID = transaction.ID
             }
                 ));
         }

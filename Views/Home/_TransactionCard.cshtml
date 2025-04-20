@@ -22,7 +22,7 @@
                     }else{
                         <span>@($"{transaction.Amount:c}")</span>
                     }
-                    <i style="cursor:pointer" class="bi bi-pencil-fill text-primary fs-6"></i>
+        <i style="cursor:pointer" onclick="editTransaction('@(transaction.ID)')" class="bi bi-pencil-fill text-primary fs-6"></i>
                     <i style="cursor:pointer" onclick="deleteTransaction('@(transaction.ID)')" class="bi bi-trash text-danger fs-6"></i>
                 </div>
                

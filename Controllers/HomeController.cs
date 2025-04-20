@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using TestMVC.Models;
 using TestMVC.Services;
+using TestMVC.Utilities;
 
 namespace TestMVC.Controllers
 {
@@ -33,16 +34,33 @@ namespace TestMVC.Controllers
             TempData["TransactionTypes"] = transactionTypes;
             Transaction newTransaction = new();
             newTransaction.TransactionDate = DateTime.Now;
-            if(transactionTypes.Any(type => type.Name.Equals("Expense")))
+            if(transactionTypes.Any(type => type.Name.Equals(TransactionUtility.TRANSACTION_TYPE_EXPENSE)))
             {
-                newTransaction.TransactionTypeID = transactionTypes.FirstOrDefault(type => type.Name.Equals("Expense")).ID;
+                newTransaction.TransactionTypeID = transactionTypes.FirstOrDefault(type => type.Name.Equals(TransactionUtility.TRANSACTION_TYPE_EXPENSE)).ID;
             }
             return View(newTransaction);
+        }
+        
+        public async Task<IActionResult> EditTransaction(Guid transactionID)
+        {
+            List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories();
+            List<TransactionSource> transactionSources = await _db.GetTransactionSources();
+            List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
+            TempData["TransactionCategories"] = transactionCategories;
+            TempData["TransactionSources"] = transactionSources;
+            TempData["TransactionTypes"] = transactionTypes;
+            Transaction editingTransaction = await _db.GetTransaction(transactionID);
+            return View(editingTransaction);
         }
 
         public async Task<IActionResult> AddNewTransaction(Transaction newTransaction)
         {
             await _db.InsertTransaction(newTransaction);
+            return RedirectToAction("Index");
+        }
+        public async Task<IActionResult> EditExistingTransaction(Transaction newTransaction)
+        {
+            await _db.UpdateTransaction(newTransaction);
             return RedirectToAction("Index");
         }
         

@@ -5,10 +5,12 @@ namespace TestMVC.Utilities
 {
     public class TransactionUtility
     {
+        public static string TRANSACTION_TYPE_EXPENSE = "Expense";
+        public static string TRANSACTION_TYPE_INCOME = "Income";
         public static decimal GetExpenses(List<Transaction> transactions)
         {
             decimal expenses = 0;
-            List<Transaction> expenseTransactions = transactions.Where(x => x.TransactionType == "Expense").ToList();
+            List<Transaction> expenseTransactions = transactions.Where(x => x.TransactionType == TRANSACTION_TYPE_EXPENSE).ToList();
             expenses = expenseTransactions.Sum(x => x.Amount);
             return expenses;
         }
@@ -16,7 +18,7 @@ namespace TestMVC.Utilities
         public static decimal GetIncome(List<Transaction> transactions)
         {
             decimal income = 0;
-            List<Transaction> incomeTransactions = transactions.Where(x => x.TransactionType == "Income").ToList();
+            List<Transaction> incomeTransactions = transactions.Where(x => x.TransactionType == TRANSACTION_TYPE_INCOME).ToList();
             income = incomeTransactions.Sum(x => x.Amount);
             return income;
         }

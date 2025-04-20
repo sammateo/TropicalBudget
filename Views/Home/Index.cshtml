@@ -26,10 +26,14 @@
             <div>
                 @{
                     decimal dailyTotal = TransactionUtility.GetIncome(groupedTransaction.ToList()) - TransactionUtility.GetExpenses(groupedTransaction.ToList());
+                    string dailyTotalPrefix = string.Empty;
+                    if (dailyTotal > 0)
+                        dailyTotalPrefix = "+";
+
                 }
                 <div class="d-flex justify-content-between align-items-center">
                     <h2>@groupedTransaction.Key.ToString("yyyy-MM-dd")</h2>
-                    <span>@($"{dailyTotal:c}")</span>
+                    <span>@($"{dailyTotalPrefix}{dailyTotal:c}")</span>
                 </div>
                 <div class="d-flex flex-column gap-2">
                     @if (groupedTransaction != null && groupedTransaction.ToList().Count > 0)
@@ -49,5 +53,10 @@
         if(confirm("Are you sure you want to delete this transaction?") == true){
             location.href = "@Url.Action("DeleteTransaction","Home")" +"?transactionID=" + transaction_id;
         }
+    }
+    
+    const editTransaction = (transaction_id) => {
+        
+            location.href = "@Url.Action("EditTransaction","Home")" +"?transactionID=" + transaction_id;
     }
 </script>
