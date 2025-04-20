@@ -1,0 +1,26 @@
+﻿@model List<Transaction>
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    List<Transaction> incomeTransactions = Model.Where(x => x.TransactionType == "Income").ToList();
+    List<Transaction> expenseTransactions = Model.Where(x => x.TransactionType == "Expense").ToList();
+    decimal incomeAmount = incomeTransactions.Sum(x => x.Amount);
+    decimal expenseAmount = expenseTransactions.Sum(x => x.Amount);
+    decimal balance = incomeAmount - expenseAmount;
+}
+
+<div class="d-flex gap-3 bg-light p-2 justify-content-center align-items-center">
+    <div class="d-flex flex-column">
+        <span class="fw-bold">@($"{incomeAmount:c}")</span>
+        <span>Income</span>
+    </div>
+    <div class="d-flex flex-column">
+        <span class="fw-bold">@($"{expenseAmount:c}")</span>
+        <span>Expenses</span>
+    </div>
+    <div class="d-flex flex-column">
+        <span class="fw-bold">@($"{balance:c}")</span>
+        <span>Balance</span>
+    </div>
+</div>
