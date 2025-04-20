@@ -14,20 +14,20 @@
             @Html.AntiForgeryToken();
             <div class="d-flex flex-column gap-2">
                 @Html.LabelFor(x =>x.Amount)
-                @Html.TextBoxFor(x => x.Amount, new {@placeholder = "Amount", @type ="number"})
+                @Html.TextBoxFor(x => x.Amount, new { @placeholder = "Amount", @type = "number", @class = "form-control" })
                 
                 @Html.LabelFor(x =>x.CategoryID, "Category")
-                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID","Name"))
+                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID","Name"), new {@class = "form-control"})
                 @Html.LabelFor(x =>x.SourceID, "From")
-                @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"))
+                @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"), new {@class = "form-control"})
                 @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
-                @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"))
+                @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-control" })
                 @Html.LabelFor(x => x.TransactionDate, "Date")
-                @Html.EditorFor(x => x.TransactionDate, "{0:yyyy-MM-dd}", new {  @Value = DateTime.Now })
+                @Html.TextBoxFor(x => x.TransactionDate, "{0:yyyy-MM-dd}", new { @type="date", @class = "form-control" })
                 @Html.LabelFor(x => x.Note)
-                @Html.TextBoxFor(x => x.Note, new { @placeholder = "Note", @type = "text" })
+                @Html.TextBoxFor(x => x.Note, new { @placeholder = "Note", @type = "text", @class = "form-control" })
 
-                <input type="submit" name="SaveButton" value="Save" />
+                <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
 
             </div>
         }
