@@ -140,6 +140,49 @@ namespace TestMVC.Services
             return users;
         }
         
+        public async Task<TransactionCategory> GetTransactionCategory(Guid category_id)
+        {
+            var users = new TransactionCategory();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT *
+                    FROM transaction_category WHERE ID = @category_id";
+            users = (await conn.QueryAsync<TransactionCategory>(query, new { category_id })).SingleOrDefault();
+            return users;
+        }
+        public async Task InsertTransactionCategory(TransactionCategory transactionCategory)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"INSERT INTO transaction_category 
+                (name)
+                VALUES 
+                (@name)";
+            int result = (await conn.ExecuteAsync(query, new { name = transactionCategory.Name }));
+        }
+
+        public async Task UpdateTransactionCategory(TransactionCategory transactionCategory)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"UPDATE transaction_category 
+                SET name = @name
+                    WHERE ID = @ID";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                name = transactionCategory.Name,
+                ID = transactionCategory.ID
+            }
+            ));
+        }
+
+        public async Task DeleteTransactionCategory(Guid categoryID)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"DELETE FROM transaction_category WHERE ID = @categoryID";
+            int result = (await conn.ExecuteAsync(query, new {categoryID}));
+        }
+
         public async Task<List<TransactionSource>> GetTransactionSources()
         {
             var users = new List<TransactionSource>();

@@ -1,0 +1,29 @@
+﻿@model TransactionCategory
+@{
+    ViewData["Title"] = "New Category";
+}
+
+<div class="text-center">
+    <h1 class="display-4">New Category</h1>
+    <div>
+        @using (Html.BeginForm("AddNewCategory", "Category"))
+        {
+            @Html.AntiForgeryToken()
+            ;
+            <div class="d-flex flex-column gap-2">
+                @Html.LabelFor(x => x.Name)
+                @Html.TextBoxFor(x => x.Name, new { @placeholder = "Category Name", @class = "form-control" })
+
+                <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
+                <input type="button" name="ExitButton" onclick="navigateToHome()" class="btn btn-outline-primary" value="Exit" />
+
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    const navigateToHome = () =>{
+        location.href = "@Url.Action("Index", "Category")";
+    }
+</script>

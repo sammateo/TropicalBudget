@@ -29,6 +29,7 @@
                 @Html.TextBoxFor(x => x.Note, new { @placeholder = "Note", @type = "text", @class = "form-control" })
 
                 <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
+                <input type="button" name="ExitButton" onclick="navigateToHome()" class="btn btn-outline-primary" value="Exit" />
 
             </div>
         }
@@ -36,5 +37,7 @@
 </div>
 
 <script>
-
+    const navigateToHome = () =>{
+        location.href = "@Url.Action("Index", "Home")";
+    }
 </script>

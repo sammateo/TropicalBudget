@@ -32,6 +32,10 @@ namespace TestMVC.Controllers
             }
             else
             {
+                if(month.Value > 12 || month.Value < 1)
+                {
+                    return RedirectToAction("Index");
+                }
                 startDate = new DateTime(year.Value, month.Value, 1, 0, 0, 0);
                 endDate = startDate.AddMonths(1).AddSeconds(-1);
                 currentMonth = $"{startDate.ToString("MMMM")}, {startDate.ToString("yyyy")}";

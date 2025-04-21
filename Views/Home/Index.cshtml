@@ -26,7 +26,7 @@
     </div>
     <partial name="~/Views/Home/_SpendingListBanner.cshtml" model="transactions" />
     <div class="my-2">
-        <a class="text-decoration-none border p-2 d-block rounded" asp-controller="Home" asp-action="NewTransaction">Add New Transaction</a>
+        <a class="text-decoration-none border p-2 d-block rounded btn btn-primary" asp-controller="Home" asp-action="NewTransaction">Add New Transaction</a>
     </div>
 </div>
 
@@ -44,11 +44,11 @@
                         dailyTotalPrefix = "+";
 
                 }
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center my-2">
                     <h2>@groupedTransaction.Key.ToString("yyyy-MM-dd")</h2>
                     <span>@($"{dailyTotalPrefix}{dailyTotal:c}")</span>
                 </div>
-                <div class="d-flex flex-column gap-2">
+                <div class="d-flex flex-column gap-2 bg-light p-2">
                     @if (groupedTransaction != null && groupedTransaction.ToList().Count > 0)
                     {
                         foreach(Transaction transaction in groupedTransaction.ToList()){
