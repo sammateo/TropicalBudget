@@ -1,0 +1,28 @@
+﻿@model Budget
+@{
+    ViewData["Title"] = "New Budget";
+}
+
+<div class="text-center">
+    <h1 class="display-4">New Budget</h1>
+    <div>
+        @using (Html.BeginForm("AddNewBudget", "Home"))
+        {
+            @Html.AntiForgeryToken()
+            ;
+            <div class="d-flex flex-column gap-2">
+                @Html.LabelFor(x => x.Name)
+                @Html.TextBoxFor(x => x.Name, new { @placeholder = "Name", @type = "text", @class = "form-control" })
+                <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
+                <input type="button" name="ExitButton" onclick="navigateToHome()" class="btn btn-outline-primary" value="Exit" />
+
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    const navigateToHome = () =>{
+        location.href = "@Url.Action("Index", "Home")";
+    }
+</script>

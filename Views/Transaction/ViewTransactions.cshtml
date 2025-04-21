@@ -1,0 +1,87 @@
+﻿@using TropicalBudget.Utilities
+@model Tuple<Guid, List<Transaction>>
+@{
+    ViewData["Title"] = "Home Page";
+    List<Transaction> transactions = Model.Item2;
+    Guid budgetID = Model.Item1;
+    List<IGrouping<DateOnly, Transaction>> groupedTransactions = transactions.GroupBy(transaction => DateOnly.FromDateTime(transaction.TransactionDate)).ToList();
+    string currentMonthString = TempData.ContainsKey("currentMonthString") ? (string)TempData["currentMonthString"] : string.Empty;
+    DateTime startDate = (DateTime)TempData["startDate"];
+    string budgetName = TempData["BudgetName"].ToString();
+    int nextMonth = startDate.AddMonths(1).Month;
+    int nextYear = startDate.AddMonths(1).Year;
+    int previousMonth = startDate.AddMonths(-1).Month;
+    int previousYear = startDate.AddMonths(-1).Year;
+
+    Dictionary<string, string> newTransactionRouteData = new()
+    {
+        {"budgetID", budgetID.ToString()}
+    };
+
+    if (groupedTransactions != null)
+        groupedTransactions = groupedTransactions.OrderByDescending(group => group.Key).ToList();
+
+}
+
+<div class="text-center">
+    <h1 class="display-4">@budgetName</h1>
+    <div class="d-flex justify-content-between align-items-center gap-2">
+        <i class="bi bi-chevron-left fs-4" onclick="previousMonth()" style="cursor:pointer"></i>
+        <p class="fs-5 fw-bold m-0">@currentMonthString</p>
+        <i class="bi bi-chevron-right fs-4" onclick="nextMonth()" style="cursor:pointer"></i>
+    </div>
+    <partial name="~/Views/Home/_SpendingListBanner.cshtml" model="transactions" />
+    <div class="my-2">
+        <a class="text-decoration-none border p-2 d-block rounded btn btn-primary" asp-controller="Transaction" asp-action="New" asp-all-route-data="newTransactionRouteData">Add New Transaction</a>
+    </div>
+</div>
+
+
+<div class="d-flex flex-column gap-2">
+    @if (groupedTransactions != null && groupedTransactions.Count > 0)
+    {
+        foreach (IGrouping<DateOnly, Transaction> groupedTransaction in groupedTransactions)
+        {
+            <div>
+                @{
+                    decimal dailyTotal = TransactionUtility.GetIncome(groupedTransaction.ToList()) - TransactionUtility.GetExpenses(groupedTransaction.ToList());
+                    string dailyTotalPrefix = string.Empty;
+                    if (dailyTotal > 0)
+                        dailyTotalPrefix = "+";
+
+                }
+                <div class="d-flex justify-content-between align-items-center my-2">
+                    <h2>@groupedTransaction.Key.ToString("yyyy-MM-dd")</h2>
+                    <span>@($"{dailyTotalPrefix}{dailyTotal:c}")</span>
+                </div>
+                <div class="d-flex flex-column gap-2 bg-light p-2">
+                    @if (groupedTransaction != null && groupedTransaction.ToList().Count > 0)
+                    {
+                        foreach (Transaction transaction in groupedTransaction.ToList())
+                        {
+                            <partial name="~/Views/Transaction/_TransactionCard.cshtml" model="transaction" />
+                        }
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<script>
+    const deleteTransaction = (transaction_id) => {
+        if(confirm("Are you sure you want to delete this transaction?") == true){
+            location.href = "@Url.Action("DeleteTransaction", "Transaction")" +"?transactionID=" + transaction_id;
+        }
+    }
+
+    const editTransaction = (transaction_id) => {
+        location.href = "@Url.Action("EditTransaction", "Transaction")" +"?transactionID=" + transaction_id;
+    }
+    const nextMonth = () =>{
+        location.href = "@Url.Action("Index", "Transaction")" + `?budgetID=${"@(budgetID.ToString())"}&year=${@(nextYear)}&month=${@(nextMonth)}`;
+    }
+    const previousMonth = () =>{
+        location.href = "@Url.Action("Index", "Transaction")" + `?budgetID=${"@(budgetID.ToString())"}&year=${@(previousYear)}&month=${@(previousMonth)}`;
+    }
+</script>

@@ -29,5 +29,7 @@ namespace TropicalBudget.Models
 
         public string TransactionType { get; set; }
 
+        public Guid BudgetID { get; set; }
+
     }
 }

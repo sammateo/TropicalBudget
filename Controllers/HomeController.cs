@@ -22,80 +22,30 @@ namespace TropicalBudget.Controllers
 
         public async Task<IActionResult> Index(int? year, int? month)
         {
-
-            ClaimsPrincipal user = User;
-            DateTime currentDate = DateTime.Now;
-            string currentMonth = string.Empty;
-            DateTime startDate;
-            DateTime endDate;
-            if (year == null || month == null)
-            {
-                currentMonth = $"{currentDate.ToString("MMMM")}, {currentDate.ToString("yyyy")}";
-                //get start and end date of the month
-                startDate = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0);
-                endDate = startDate.AddMonths(1).AddSeconds(-1);
-            }
-            else
-            {
-                if(month.Value > 12 || month.Value < 1)
-                {
-                    return RedirectToAction("Index");
-                }
-                startDate = new DateTime(year.Value, month.Value, 1, 0, 0, 0);
-                endDate = startDate.AddMonths(1).AddSeconds(-1);
-                currentMonth = $"{startDate.ToString("MMMM")}, {startDate.ToString("yyyy")}";
-            }
-            TempData["currentMonthString"] = currentMonth;
-            TempData["startDate"] = startDate;
-            List<Transaction> transactions = await _db.GetTransactions(startDate,endDate);
+            string userID = UserUtility.GetUserID(User);
+            List<Budget> transactions = await _db.GetBudgets(userID);
             return View(transactions);
         }
-        
-        public async Task<IActionResult> NewTransaction()
+
+        public async Task<IActionResult> NewBudget()
         {
-            List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories();
-            List<TransactionSource> transactionSources = await _db.GetTransactionSources();
-            List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
-            TempData["TransactionCategories"] = transactionCategories;
-            TempData["TransactionSources"] = transactionSources;
-            TempData["TransactionTypes"] = transactionTypes;
-            Transaction newTransaction = new();
-            newTransaction.TransactionDate = DateTime.Now;
-            if(transactionTypes.Any(type => type.Name.Equals(TransactionUtility.TRANSACTION_TYPE_EXPENSE)))
-            {
-                newTransaction.TransactionTypeID = transactionTypes.FirstOrDefault(type => type.Name.Equals(TransactionUtility.TRANSACTION_TYPE_EXPENSE)).ID;
-            }
-            return View(newTransaction);
-        }
-        
-        public async Task<IActionResult> EditTransaction(Guid transactionID)
-        {
-            List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories();
-            List<TransactionSource> transactionSources = await _db.GetTransactionSources();
-            List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
-            TempData["TransactionCategories"] = transactionCategories;
-            TempData["TransactionSources"] = transactionSources;
-            TempData["TransactionTypes"] = transactionTypes;
-            Transaction editingTransaction = await _db.GetTransaction(transactionID);
-            return View(editingTransaction);
+            Budget newBudget = new();
+            return View(newBudget);
         }
 
-        public async Task<IActionResult> AddNewTransaction(Transaction newTransaction)
+        public async Task<IActionResult> AddNewBudget(Budget newBudget)
         {
-            await _db.InsertTransaction(newTransaction);
+            string userID = UserUtility.GetUserID(User);
+            newBudget.UserID = userID;
+            await _db.InsertBudget(newBudget);
             return RedirectToAction("Index");
         }
-        public async Task<IActionResult> EditExistingTransaction(Transaction newTransaction)
-        {
-            await _db.UpdateTransaction(newTransaction);
-            return RedirectToAction("Index");
-        }
+
+       
         
-        public async Task<IActionResult> DeleteTransaction(Guid transactionID)
-        {
-            await _db.DeleteTransaction(transactionID);
-            return RedirectToAction("Index");
-        }
+        
+        
+        
 
         public IActionResult Privacy()
         {

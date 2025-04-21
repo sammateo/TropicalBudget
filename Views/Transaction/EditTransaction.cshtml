@@ -1,23 +1,25 @@
 ﻿@model Transaction
 @{
-    ViewData["Title"] = "New Transaction";
+    ViewData["Title"] = "Edit Transaction";
     List<TransactionCategory> transactionCategories = (List<TransactionCategory>)TempData["TransactionCategories"];
     List<TransactionSource> transactionSources = (List<TransactionSource>)TempData["TransactionSources"];
     List<TransactionType> transactionTypes = (List<TransactionType>)TempData["TransactionTypes"];
 }
 
 <div class="text-center">
-    <h1 class="display-4">New Transaction</h1>
+    <h1 class="display-4">Edit Transaction</h1>
     <div>
-        @using (Html.BeginForm("AddNewTransaction", "Home"))
+        @using (Html.BeginForm("EditExistingTransaction", "Transaction"))
         {
             @Html.AntiForgeryToken();
             <div class="d-flex flex-column gap-2">
+                @Html.HiddenFor(x => x.ID)
+                @Html.HiddenFor(x => x.BudgetID)
                 @Html.LabelFor(x =>x.Amount)
                 @Html.TextBoxFor(x => x.Amount, new { @placeholder = "Amount", @type = "number", @class = "form-control" })
                 
                 @Html.LabelFor(x =>x.CategoryID, "Category")
-                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID", "Name"), new { @class = "form-select" })
+                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID","Name"), new {@class = "form-select"})
                 @Html.LabelFor(x =>x.SourceID, "From")
                 @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"), new { @class = "form-select" })
                 @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
@@ -37,6 +39,6 @@
 
 <script>
     const navigateToHome = () =>{
-        location.href = "@Url.Action("Index", "Home")";
+        location.href = "@Url.Action("Index", "Transaction")" +"?budgetID=@(Model.BudgetID.ToString())";
     }
 </script>

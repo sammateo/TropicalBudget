@@ -15,6 +15,54 @@ namespace TropicalBudget.Services
             _config = config;
             _connectionString = _config.GetConnectionString("SupabaseConnection");
         }
+
+        #region Budget
+        public async Task<List<Budget>> GetBudgets(string userID)
+        {
+            var users = new List<Budget>();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT ID, name, user_id AS userid from budget
+                            WHERE user_id = @userID";
+            users = (await conn.QueryAsync<Budget>(query, new { userID })).ToList();
+            return users;
+        }
+        
+        public async Task<Budget> GetBudget(string userID, Guid budgetID)
+        {
+            var users = new Budget();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT ID, name, user_id AS userid from budget
+                            WHERE user_id = @userID AND ID = @budgetID";
+            users = (await conn.QueryAsync<Budget>(query, new { userID, budgetID })).SingleOrDefault();
+            return users;
+        }
+
+        public async Task InsertBudget(Budget budget)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"INSERT INTO budget 
+                (name, user_id)
+                VALUES 
+                (@name, @user_id)";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                name = budget.Name,
+                user_id = budget.UserID
+            }));
+        }
+        #endregion
+
+        #region Transactions 
+        #endregion
+
+        #region Categories
+        #endregion
+
+        #region Sources
+        #endregion
         public async Task<List<Transaction>> GetTransactions()
         {
             var users = new List<Transaction>();
@@ -49,9 +97,25 @@ namespace TropicalBudget.Services
                     LEFT JOIN transaction_category tc ON t.category_id = tc.id
                     LEFT JOIN transaction_source ts ON t.source_id = ts.id
                     LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
-                    WHERE DATE(transaction_date) BETWEEN DATE(@startDate) AND DATE(@endDate)          
-";
+                    WHERE DATE(transaction_date) BETWEEN DATE(@startDate) AND DATE(@endDate)";
             users = (await conn.QueryAsync<Transaction>(query, new {startDate, endDate})).ToList();
+            return users;
+        }
+        
+        public async Task<List<Transaction>> GetTransactions(Guid budgetID, DateTime startDate, DateTime endDate)
+        {
+            var users = new List<Transaction>();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype,
+                    transaction_date as transactiondate, category_id AS categoryid, 
+                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
+                    FROM transactions t
+                    LEFT JOIN transaction_category tc ON t.category_id = tc.id
+                    LEFT JOIN transaction_source ts ON t.source_id = ts.id
+                    LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
+                    WHERE budget_id = @budgetID AND DATE(transaction_date) BETWEEN DATE(@startDate) AND DATE(@endDate)";
+            users = (await conn.QueryAsync<Transaction>(query, new { budgetID, startDate, endDate})).ToList();
             return users;
         }
         
@@ -60,7 +124,7 @@ namespace TropicalBudget.Services
             var users = new Transaction();
 
             using var conn = new NpgsqlConnection(_connectionString);
-            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype,
+            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype, budget_id AS budgetid,
                     transaction_date as transactiondate, category_id AS categoryid, 
                     source_id as sourceid,tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
                     FROM transactions t
@@ -77,9 +141,9 @@ namespace TropicalBudget.Services
             using var conn = new NpgsqlConnection(_connectionString);
 
             string query = @"INSERT INTO transactions 
-                (amount, note, transaction_date, category_id, source_id, transaction_type_id)
+                (amount, note, transaction_date, category_id, source_id, transaction_type_id, budget_id)
                 VALUES 
-                (@amount, @note, @transaction_date, @category_id, @source_id, @transaction_type_id)";
+                (@amount, @note, @transaction_date, @category_id, @source_id, @transaction_type_id, @budget_id)";
             int result = (await conn.ExecuteAsync(query, new
             {
                 amount = transaction.Amount,
@@ -87,7 +151,8 @@ namespace TropicalBudget.Services
                 transaction_date = transaction.TransactionDate,
                 category_id = transaction.CategoryID,
                 source_id = transaction.SourceID,
-                transaction_type_id = transaction.TransactionTypeID
+                transaction_type_id = transaction.TransactionTypeID,
+                budget_id = transaction.BudgetID
             }
                 ));
         }
