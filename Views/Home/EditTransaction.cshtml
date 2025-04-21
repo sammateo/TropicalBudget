@@ -7,7 +7,7 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">New Transaction</h1>
+    <h1 class="display-4">Edit Transaction</h1>
     <div>
         @using (Html.BeginForm("EditExistingTransaction", "Home"))
         {
@@ -18,11 +18,11 @@
                 @Html.TextBoxFor(x => x.Amount, new { @placeholder = "Amount", @type = "number", @class = "form-control" })
                 
                 @Html.LabelFor(x =>x.CategoryID, "Category")
-                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID","Name"), new {@class = "form-control"})
+                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID","Name"), new {@class = "form-select"})
                 @Html.LabelFor(x =>x.SourceID, "From")
-                @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"), new {@class = "form-control"})
+                @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"), new { @class = "form-select" })
                 @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
-                @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-control" })
+                @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select" })
                 @Html.LabelFor(x => x.TransactionDate, "Date")
                 @Html.TextBoxFor(x => x.TransactionDate, "{0:yyyy-MM-dd}", new { @type="date", @class = "form-control" })
                 @Html.LabelFor(x => x.Note)
