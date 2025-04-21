@@ -1,15 +1,14 @@
 using Auth0.AspNetCore.Authentication;
+using Microsoft.AspNetCore.HttpOverrides;
 using TropicalBudget.Services;
 using TropicalBudget.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
-// Cookie configuration for HTTP to support cookies with SameSite=None
-//builder.Services.Configure<CookiePolicyOptions>(options =>
-//{
-//    options.Secure = CookieSecurePolicy.Always;
-//    options.HttpOnly = HttpOnlyPolicy.Always;
-//    options.MinimumSameSitePolicy = SameSiteMode.None;
-//});
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
+});
 builder.Services.ConfigureSameSiteNoneCookies();
 builder.Services.AddAuth0WebAppAuthentication(options =>
 {
@@ -23,7 +22,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<DatabaseService>();
 
 var app = builder.Build();
-
+app.UseForwardedHeaders();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
