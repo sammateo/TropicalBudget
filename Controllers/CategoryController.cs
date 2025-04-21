@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TropicalBudget.Models;
 using TropicalBudget.Services;
 
 namespace TropicalBudget.Controllers
 {
+    [Authorize]
     public class CategoryController : Controller
     {
         private readonly DatabaseService _db;

@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TropicalBudget.Models;
 using TropicalBudget.Services;
@@ -6,6 +8,7 @@ using TropicalBudget.Utilities;
 
 namespace TropicalBudget.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -19,6 +22,8 @@ namespace TropicalBudget.Controllers
 
         public async Task<IActionResult> Index(int? year, int? month)
         {
+
+            ClaimsPrincipal user = User;
             DateTime currentDate = DateTime.Now;
             string currentMonth = string.Empty;
             DateTime startDate;

@@ -1,6 +1,22 @@
+using Auth0.AspNetCore.Authentication;
 using TropicalBudget.Services;
+using TropicalBudget.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
+// Cookie configuration for HTTP to support cookies with SameSite=None
+//builder.Services.Configure<CookiePolicyOptions>(options =>
+//{
+//    options.Secure = CookieSecurePolicy.Always;
+//    options.HttpOnly = HttpOnlyPolicy.Always;
+//    options.MinimumSameSitePolicy = SameSiteMode.None;
+//});
+builder.Services.ConfigureSameSiteNoneCookies();
+builder.Services.AddAuth0WebAppAuthentication(options =>
+{
+    options.Domain = builder.Configuration["Auth0:Domain"];
+    options.ClientId = builder.Configuration["Auth0:ClientId"];
+    options.ClientSecret = builder.Configuration["Auth0:ClientSecret"];
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -21,6 +37,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
@@ -28,3 +45,4 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
