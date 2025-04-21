@@ -4,7 +4,7 @@ using TropicalBudget.Services;
 using TropicalBudget.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
-
+//https://community.auth0.com/t/redirect-uri-is-always-http-but-only-in-production/83978/4
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
