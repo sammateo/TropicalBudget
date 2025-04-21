@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
-using TestMVC.Models;
+using TropicalBudget.Models;
 
-namespace TestMVC.Utilities
+namespace TropicalBudget.Utilities
 {
     public class TransactionUtility
     {

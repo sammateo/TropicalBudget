@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TestMVC.Models
+namespace TropicalBudget.Models
 {
     public class Transaction
     {

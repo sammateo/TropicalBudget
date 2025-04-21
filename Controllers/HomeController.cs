@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using TestMVC.Models;
-using TestMVC.Services;
-using TestMVC.Utilities;
+using TropicalBudget.Models;
+using TropicalBudget.Services;
+using TropicalBudget.Utilities;
 
-namespace TestMVC.Controllers
+namespace TropicalBudget.Controllers
 {
     public class HomeController : Controller
     {

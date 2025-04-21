@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using TestMVC.Models;
-using TestMVC.Services;
+using TropicalBudget.Models;
+using TropicalBudget.Services;
 
-namespace TestMVC.Controllers
+namespace TropicalBudget.Controllers
 {
     public class CategoryController : Controller
     {

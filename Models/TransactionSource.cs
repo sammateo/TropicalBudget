@@ -1,4 +1,4 @@
-﻿namespace TestMVC.Models
+﻿namespace TropicalBudget.Models
 {
     public class TransactionSource
     {

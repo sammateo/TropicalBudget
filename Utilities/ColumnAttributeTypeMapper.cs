@@ -3,7 +3,7 @@ using Dapper;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 
-namespace TestMVC.Utilities
+namespace TropicalBudget.Utilities
 {
     public class ColumnAttributeTypeMapper<T> : SqlMapper.ITypeMap
     {

@@ -1,9 +1,9 @@
 ﻿using System.Net;
 using Dapper;
 using Npgsql;
-using TestMVC.Models;
+using TropicalBudget.Models;
 
-namespace TestMVC.Services
+namespace TropicalBudget.Services
 {
     public class DatabaseService
     {
