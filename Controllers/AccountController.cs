@@ -17,6 +17,7 @@ namespace TropicalBudget.Controllers
                 // Note that the resulting absolute Uri must be added to the
                 // **Allowed Callback URLs** settings for the app.
                 .WithRedirectUri(returnUrl)
+                .WithScope("openid profile email")
                 .Build();
 
             await HttpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);

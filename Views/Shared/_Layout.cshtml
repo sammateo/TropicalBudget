@@ -33,12 +33,12 @@
                     <div class="d-flex gap-2 align-items-center">
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
-                            <span>Hello @User.Identity.Name</span>
-                            <a href="/Account/Logout">Logout</a>
+                            <a asp-area="" asp-controller="Account" asp-action="Profile">Hello @User.Identity.Name</a>
+                            <a asp-area="" asp-controller="Account" asp-action="Logout">Logout</a>
                                         }
                                         else
                                         {
-                            <a href="/Account/Login">Login</a>
+                            <a asp-area="" asp-controller="Account" asp-action="Login">Login</a>
                         }
                     </div>
                 </div>
