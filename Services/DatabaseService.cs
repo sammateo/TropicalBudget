@@ -31,6 +31,30 @@ namespace TestMVC.Services
             return users;
         }
         
+        /// <summary>
+        /// Get Transactions between a certain date range
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
+        public async Task<List<Transaction>> GetTransactions(DateTime startDate, DateTime endDate)
+        {
+            var users = new List<Transaction>();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype,
+                    transaction_date as transactiondate, category_id AS categoryid, 
+                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
+                    FROM transactions t
+                    LEFT JOIN transaction_category tc ON t.category_id = tc.id
+                    LEFT JOIN transaction_source ts ON t.source_id = ts.id
+                    LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
+                    WHERE DATE(transaction_date) BETWEEN DATE(@startDate) AND DATE(@endDate)          
+";
+            users = (await conn.QueryAsync<Transaction>(query, new {startDate, endDate})).ToList();
+            return users;
+        }
+        
         public async Task<Transaction> GetTransaction(Guid transaction_id)
         {
             var users = new Transaction();

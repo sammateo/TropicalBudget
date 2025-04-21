@@ -17,11 +17,29 @@ namespace TestMVC.Controllers
             _db = db;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? year, int? month)
         {
-            List<Transaction> transactions = await _db.GetTransactions();
+            DateTime currentDate = DateTime.Now;
+            string currentMonth = string.Empty;
+            DateTime startDate;
+            DateTime endDate;
+            if (year == null || month == null)
+            {
+                currentMonth = $"{currentDate.ToString("MMMM")}, {currentDate.ToString("yyyy")}";
+                //get start and end date of the month
+                startDate = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0);
+                endDate = startDate.AddMonths(1).AddSeconds(-1);
+            }
+            else
+            {
+                startDate = new DateTime(year.Value, month.Value, 1, 0, 0, 0);
+                endDate = startDate.AddMonths(1).AddSeconds(-1);
+                currentMonth = $"{startDate.ToString("MMMM")}, {startDate.ToString("yyyy")}";
+            }
+            TempData["currentMonthString"] = currentMonth;
+            TempData["startDate"] = startDate;
+            List<Transaction> transactions = await _db.GetTransactions(startDate,endDate);
             return View(transactions);
-
         }
         
         public async Task<IActionResult> NewTransaction()
