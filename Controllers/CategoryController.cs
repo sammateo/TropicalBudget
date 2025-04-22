@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TropicalBudget.Models;
 using TropicalBudget.Services;
+using TropicalBudget.Utilities;
 
 namespace TropicalBudget.Controllers
 {
@@ -16,7 +17,8 @@ namespace TropicalBudget.Controllers
     
         public async Task<IActionResult> Index()
         {
-            List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories();
+            string userID = UserUtility.GetUserID(User);
+            List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
             return View("CategoryIndex", transactionCategories);
         }
         
@@ -26,18 +28,23 @@ namespace TropicalBudget.Controllers
         }
         public async Task<IActionResult> Edit(Guid categoryID)
         {
-            TransactionCategory transactionCategory = await _db.GetTransactionCategory(categoryID);
+            string userID = UserUtility.GetUserID(User);
+            TransactionCategory transactionCategory = await _db.GetTransactionCategory(categoryID, userID);
             return View("EditCategory", transactionCategory);
         }
 
         public async Task<IActionResult> AddNewCategory(TransactionCategory newCategory)
         {
+            string userID = UserUtility.GetUserID(User);
+            newCategory.UserID = userID;
             await _db.InsertTransactionCategory(newCategory);
             return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> EditExistingCategory(TransactionCategory newCategory)
         {
+            string userID = UserUtility.GetUserID(User);
+            newCategory.UserID = userID;
             await _db.UpdateTransactionCategory(newCategory);
             return RedirectToAction("Index");
         }

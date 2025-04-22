@@ -1,4 +1,5 @@
-﻿@model Transaction
+﻿@using TropicalBudget.Utilities
+@model Transaction
 @{
     ViewData["Title"] = "New Transaction";
     List<TransactionCategory> transactionCategories = (List<TransactionCategory>)TempData["TransactionCategories"];
@@ -19,10 +20,10 @@
                 
                 @Html.LabelFor(x =>x.CategoryID, "Category")
                 @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID", "Name"), new { @class = "form-select" })
-                @Html.LabelFor(x =>x.SourceID, "From")
+                @Html.LabelFor(x =>x.SourceID, "From", new{ @id ="source-label"})
                 @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"), new { @class = "form-select" })
                 @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
-                @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select" })
+                @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select", @onchange = "onTransactionTypeChanged(this.options[this.selectedIndex].text)" })
                 @Html.LabelFor(x => x.TransactionDate, "Date")
                 @Html.TextBoxFor(x => x.TransactionDate, "{0:yyyy-MM-dd}", new { @type="date", @class = "form-control" })
                 @Html.LabelFor(x => x.Note)
@@ -39,5 +40,14 @@
 <script>
     const navigateToHome = () =>{
         location.href = "@Url.Action("Index", "Home")" +"?budgetID=@(Model.BudgetID.ToString())";
+    }
+    const onTransactionTypeChanged = (transactionType) =>  {
+        const source_label = document.getElementById('source-label');
+        if(transactionType == "@TransactionUtility.TRANSACTION_TYPE_EXPENSE"){
+            source_label.innerText = "From";
+        }else if(transactionType == "@TransactionUtility.TRANSACTION_TYPE_INCOME"){
+            source_label.innerText = "To";
+
+        }
     }
 </script>

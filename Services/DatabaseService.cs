@@ -56,13 +56,6 @@ namespace TropicalBudget.Services
         #endregion
 
         #region Transactions 
-        #endregion
-
-        #region Categories
-        #endregion
-
-        #region Sources
-        #endregion
         public async Task<List<Transaction>> GetTransactions()
         {
             var users = new List<Transaction>();
@@ -78,7 +71,7 @@ namespace TropicalBudget.Services
             users = (await conn.QueryAsync<Transaction>(query)).ToList();
             return users;
         }
-        
+
         /// <summary>
         /// Get Transactions between a certain date range
         /// </summary>
@@ -98,10 +91,10 @@ namespace TropicalBudget.Services
                     LEFT JOIN transaction_source ts ON t.source_id = ts.id
                     LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
                     WHERE DATE(transaction_date) BETWEEN DATE(@startDate) AND DATE(@endDate)";
-            users = (await conn.QueryAsync<Transaction>(query, new {startDate, endDate})).ToList();
+            users = (await conn.QueryAsync<Transaction>(query, new { startDate, endDate })).ToList();
             return users;
         }
-        
+
         public async Task<List<Transaction>> GetTransactions(Guid budgetID, DateTime startDate, DateTime endDate)
         {
             var users = new List<Transaction>();
@@ -115,10 +108,10 @@ namespace TropicalBudget.Services
                     LEFT JOIN transaction_source ts ON t.source_id = ts.id
                     LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
                     WHERE budget_id = @budgetID AND DATE(transaction_date) BETWEEN DATE(@startDate) AND DATE(@endDate)";
-            users = (await conn.QueryAsync<Transaction>(query, new { budgetID, startDate, endDate})).ToList();
+            users = (await conn.QueryAsync<Transaction>(query, new { budgetID, startDate, endDate })).ToList();
             return users;
         }
-        
+
         public async Task<Transaction> GetTransaction(Guid transaction_id)
         {
             var users = new Transaction();
@@ -166,7 +159,8 @@ namespace TropicalBudget.Services
                     transaction_date = @transaction_date,
                     category_id = @category_id,
                     source_id = @source_id,
-                    transaction_type_id = @transaction_type_id
+                    transaction_type_id = @transaction_type_id,
+                    budget_id = @budget_id
                     WHERE ID = @ID";
             int result = (await conn.ExecuteAsync(query, new
             {
@@ -176,6 +170,7 @@ namespace TropicalBudget.Services
                 category_id = transaction.CategoryID,
                 source_id = transaction.SourceID,
                 transaction_type_id = transaction.TransactionTypeID,
+                budget_id = transaction.BudgetID,
                 ID = transaction.ID
             }
                 ));
@@ -188,31 +183,32 @@ namespace TropicalBudget.Services
             string query = @"DELETE FROM transactions 
                 WHERE ID = @transactionID";
             int result = (await conn.ExecuteAsync(query, new
-                {
+            {
                 transactionID
-                }));
+            }));
         }
+        #endregion
 
-
-        public async Task<List<TransactionCategory>> GetTransactionCategories()
+        #region Categories
+        public async Task<List<TransactionCategory>> GetTransactionCategories(string userID)
         {
             var users = new List<TransactionCategory>();
 
             using var conn = new NpgsqlConnection(_connectionString);
-            string query = @"SELECT *
-                    FROM transaction_category";
-            users = (await conn.QueryAsync<TransactionCategory>(query)).ToList();
+            string query = @"SELECT id, name, user_id AS userid
+                    FROM transaction_category WHERE user_id = @userID";
+            users = (await conn.QueryAsync<TransactionCategory>(query, new {userID})).ToList();
             return users;
         }
-        
-        public async Task<TransactionCategory> GetTransactionCategory(Guid category_id)
+
+        public async Task<TransactionCategory> GetTransactionCategory(Guid category_id, string userID)
         {
             var users = new TransactionCategory();
 
             using var conn = new NpgsqlConnection(_connectionString);
-            string query = @"SELECT *
-                    FROM transaction_category WHERE ID = @category_id";
-            users = (await conn.QueryAsync<TransactionCategory>(query, new { category_id })).SingleOrDefault();
+            string query = @"SELECT id, name, user_id AS userid
+                    FROM transaction_category WHERE ID = @category_id AND user_id = @userID";
+            users = (await conn.QueryAsync<TransactionCategory>(query, new { category_id, userID })).SingleOrDefault();
             return users;
         }
         public async Task InsertTransactionCategory(TransactionCategory transactionCategory)
@@ -220,10 +216,10 @@ namespace TropicalBudget.Services
             using var conn = new NpgsqlConnection(_connectionString);
 
             string query = @"INSERT INTO transaction_category 
-                (name)
+                (name, user_id)
                 VALUES 
-                (@name)";
-            int result = (await conn.ExecuteAsync(query, new { name = transactionCategory.Name }));
+                (@name, @user_id)";
+            int result = (await conn.ExecuteAsync(query, new { name = transactionCategory.Name, user_id = transactionCategory.UserID }));
         }
 
         public async Task UpdateTransactionCategory(TransactionCategory transactionCategory)
@@ -231,11 +227,13 @@ namespace TropicalBudget.Services
             using var conn = new NpgsqlConnection(_connectionString);
 
             string query = @"UPDATE transaction_category 
-                SET name = @name
+                SET name = @name,
+                    user_id = @user_id
                     WHERE ID = @ID";
             int result = (await conn.ExecuteAsync(query, new
             {
                 name = transactionCategory.Name,
+                user_id = transactionCategory.UserID,
                 ID = transactionCategory.ID
             }
             ));
@@ -245,30 +243,32 @@ namespace TropicalBudget.Services
         {
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"DELETE FROM transaction_category WHERE ID = @categoryID";
-            int result = (await conn.ExecuteAsync(query, new {categoryID}));
+            int result = (await conn.ExecuteAsync(query, new { categoryID }));
         }
+        #endregion
 
+        #region Sources
         public async Task<List<TransactionSource>> GetTransactionSources()
         {
             var users = new List<TransactionSource>();
-
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT *
                     FROM transaction_source";
             users = (await conn.QueryAsync<TransactionSource>(query)).ToList();
             return users;
         }
-        
+        #endregion
+
+        #region Types
         public async Task<List<TransactionType>> GetTransactionTypes()
         {
             var users = new List<TransactionType>();
-
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT *
                     FROM transaction_type";
             users = (await conn.QueryAsync<TransactionType>(query)).ToList();
             return users;
         }
-
+        #endregion
     }
 }

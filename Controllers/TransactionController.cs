@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TropicalBudget.Models;
 using TropicalBudget.Services;
@@ -54,7 +53,8 @@ namespace TropicalBudget.Controllers
 
         public async Task<IActionResult> New(Guid budgetID)
         {
-            List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories();
+            string userID = UserUtility.GetUserID(User);
+            List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
             List<TransactionSource> transactionSources = await _db.GetTransactionSources();
             List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
             TempData["TransactionCategories"] = transactionCategories;
@@ -72,7 +72,8 @@ namespace TropicalBudget.Controllers
 
         public async Task<IActionResult> EditTransaction(Guid transactionID)
         {
-            List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories();
+            string userID = UserUtility.GetUserID(User);
+            List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
             List<TransactionSource> transactionSources = await _db.GetTransactionSources();
             List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
             TempData["TransactionCategories"] = transactionCategories;
@@ -94,10 +95,10 @@ namespace TropicalBudget.Controllers
             return RedirectToAction("Index", new { budgetID = newTransaction.BudgetID });
         }
 
-        public async Task<IActionResult> DeleteTransaction(Guid transactionID)
+        public async Task<IActionResult> DeleteTransaction(Guid budgetID, Guid transactionID)
         {
             await _db.DeleteTransaction(transactionID);
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", new { budgetID });
         }
     }
 }

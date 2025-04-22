@@ -6,24 +6,24 @@
     Transaction transaction = Model;
 }
 
-<div class="d-flex justify-content-between align-items-center bg-white rounded p-2">
-                <div class="d-flex flex-column gap-0">
-                    @if(!string.IsNullOrWhiteSpace(transaction.Note)){
-                        <span class="fs-4 fw-normal">@(transaction.Note)</span>
-                        <span class="fs-6 fw-light">@(transaction.CategoryName)</span>
-                    }
-                    else{
-                        <span class="fs-4 fw-normal">@(transaction.CategoryName)</span>
-                    }
-                </div>
-                <div class="d-flex gap-2 align-items-center">
-                    @if(transaction.TransactionType.Equals("Income")){
-                        <span style="color:green">+@($"{transaction.Amount:c}")</span>
-                    }else{
-                        <span>@($"{transaction.Amount:c}")</span>
-                    }
-        <i style="cursor:pointer" onclick="editTransaction('@(transaction.ID)')" class="bi bi-pencil-fill text-primary fs-6"></i>
-                    <i style="cursor:pointer" onclick="deleteTransaction('@(transaction.ID)')" class="bi bi-trash text-danger fs-6"></i>
-                </div>
+<div class="d-flex justify-content-between align-items-center bg-light rounded px-4 py-2">
+    <div class="d-flex flex-column gap-0">
+        @if(!string.IsNullOrWhiteSpace(transaction.Note)){
+            <span class="fs-4 fw-normal">@(transaction.Note)</span>
+            <span class="fs-6 fw-light">@(transaction.CategoryName)</span>
+        }
+        else{
+            <span class="fs-4 fw-normal">@(transaction.CategoryName)</span>
+        }
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        @if(transaction.TransactionType.Equals("Income")){
+            <span style="color:green" class="fw-bold fs-5">+@($"{transaction.Amount:c}")</span>
+        }else{
+            <span class="fw-bold fs-5">@($"{transaction.Amount:c}")</span>
+        }
+        <i style="cursor:pointer" onclick="editTransaction('@(transaction.ID)')" class="bi bi-pencil-fill text-white px-3 py-2 fs-4 bg-primary rounded"></i>
+        <i style="cursor:pointer" onclick="deleteTransaction('@(transaction.ID)')" class="bi bi-trash text-white px-3 py-2 fs-4 bg-danger rounded"></i>
+    </div>
                
-            </div>
+</div>
