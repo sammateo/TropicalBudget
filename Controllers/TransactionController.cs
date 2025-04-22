@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TropicalBudget.Models;
 using TropicalBudget.Services;
@@ -6,6 +7,7 @@ using TropicalBudget.Utilities;
 
 namespace TropicalBudget.Controllers
 {
+    [Authorize]
     public class TransactionController : Controller
     {
         private readonly DatabaseService _db;
