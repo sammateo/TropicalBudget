@@ -39,12 +39,56 @@ namespace TropicalBudget.Controllers
             await _db.InsertBudget(newBudget);
             return RedirectToAction("Index");
         }
+        [HttpPost]
+        public async Task<IActionResult> UpdateBudgetName(Guid budgetID, string name)
+        {
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                Budget newBudget = new()
+                {
+                    Name = name,
+                    ID = budgetID,
+                    UserID = userID
+                };
+                await _db.UpdateBudget(newBudget);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return BadRequest($"An error occurred while processing your request");
+            }
+                return Ok("success");
+            
+        }
 
        
-        
-        
-        
-        
+        [HttpDelete]
+        public async Task<IActionResult> DeleteBudget(Guid budgetID)
+        {
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                Budget deletedBudget = new()
+                {
+                    ID = budgetID,
+                    UserID = userID
+                };
+                await _db.DeleteBudget(deletedBudget);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return BadRequest($"An error occurred while processing your request");
+            }
+            return RedirectToAction("Index");
+        }
+
+
+
+
+
+
 
         public IActionResult Privacy()
         {

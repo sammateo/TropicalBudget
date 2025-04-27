@@ -20,3 +20,16 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.budget-name{
+    outline:none;
+    border:none;
+    border-bottom:2px solid transparent;
+    text-align:center;
+    padding:10px 0px;
+    transition: border ease-in-out 500ms;
+}
+
+.budget-name:focus{
+    border-bottom: 2px solid black;
+}

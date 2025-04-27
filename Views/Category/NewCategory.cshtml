@@ -13,6 +13,8 @@
             <div class="d-flex flex-column gap-2">
                 @Html.LabelFor(x => x.Name)
                 @Html.TextBoxFor(x => x.Name, new { @placeholder = "Category Name", @class = "form-control" })
+                @Html.LabelFor(x => x.Color)
+                @Html.TextBoxFor(x => x.Color, new { @type = "color", @class = "bg-light rounded border border-grey", @style = "width:100%" })
 
                 <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
                 <input type="button" name="ExitButton" onclick="navigateToHome()" class="btn btn-outline-primary" value="Exit" />

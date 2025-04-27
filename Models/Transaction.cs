@@ -25,6 +25,7 @@ namespace TropicalBudget.Models
         public DateTime TransactionDate { get; set; }
 
         public string CategoryName { get; set; }
+        public string CategoryColor { get; set; }
         public string SourceName { get; set; }
 
         public string TransactionType { get; set; }

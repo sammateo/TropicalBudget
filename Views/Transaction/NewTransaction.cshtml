@@ -39,7 +39,7 @@
 
 <script>
     const navigateToHome = () =>{
-        location.href = "@Url.Action("Index", "Home")" +"?budgetID=@(Model.BudgetID.ToString())";
+        location.href = "@Url.Action("Index", "Transaction")" +"?budgetID=@(Model.BudgetID.ToString())";
     }
     const onTransactionTypeChanged = (transactionType) =>  {
         const source_label = document.getElementById('source-label');

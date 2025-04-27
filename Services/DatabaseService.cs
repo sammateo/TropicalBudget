@@ -53,6 +53,34 @@ namespace TropicalBudget.Services
                 user_id = budget.UserID
             }));
         }
+        
+        public async Task UpdateBudget(Budget budget)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"UPDATE budget 
+                SET name = @name,
+                    user_id = @user_id
+                    WHERE ID = @budgetID AND user_id = @user_id";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                name = budget.Name,
+                user_id = budget.UserID,
+                budgetID = budget.ID
+            }));
+        }
+        public async Task DeleteBudget(Budget budget)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"DELETE FROM budget 
+                    WHERE ID = @budgetID AND user_id = @user_id";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                user_id = budget.UserID,
+                budgetID = budget.ID
+            }));
+        }
         #endregion
 
         #region Transactions 
@@ -100,7 +128,7 @@ namespace TropicalBudget.Services
             var users = new List<Transaction>();
 
             using var conn = new NpgsqlConnection(_connectionString);
-            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype,
+            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, tc.color AS categorycolor, ts.name AS sourcename, tt.name AS transactiontype,
                     transaction_date as transactiondate, category_id AS categoryid, 
                     source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
                     FROM transactions t
@@ -195,7 +223,7 @@ namespace TropicalBudget.Services
             var users = new List<TransactionCategory>();
 
             using var conn = new NpgsqlConnection(_connectionString);
-            string query = @"SELECT id, name, user_id AS userid
+            string query = @"SELECT id, name, user_id AS userid, color
                     FROM transaction_category WHERE user_id = @userID";
             users = (await conn.QueryAsync<TransactionCategory>(query, new {userID})).ToList();
             return users;
@@ -206,7 +234,7 @@ namespace TropicalBudget.Services
             var users = new TransactionCategory();
 
             using var conn = new NpgsqlConnection(_connectionString);
-            string query = @"SELECT id, name, user_id AS userid
+            string query = @"SELECT id, name, user_id AS userid, color
                     FROM transaction_category WHERE ID = @category_id AND user_id = @userID";
             users = (await conn.QueryAsync<TransactionCategory>(query, new { category_id, userID })).SingleOrDefault();
             return users;
@@ -216,10 +244,10 @@ namespace TropicalBudget.Services
             using var conn = new NpgsqlConnection(_connectionString);
 
             string query = @"INSERT INTO transaction_category 
-                (name, user_id)
+                (name, user_id, color)
                 VALUES 
-                (@name, @user_id)";
-            int result = (await conn.ExecuteAsync(query, new { name = transactionCategory.Name, user_id = transactionCategory.UserID }));
+                (@name, @user_id, @color)";
+            int result = (await conn.ExecuteAsync(query, new { name = transactionCategory.Name, user_id = transactionCategory.UserID, color=transactionCategory.Color }));
         }
 
         public async Task UpdateTransactionCategory(TransactionCategory transactionCategory)
@@ -228,13 +256,15 @@ namespace TropicalBudget.Services
 
             string query = @"UPDATE transaction_category 
                 SET name = @name,
-                    user_id = @user_id
+                    user_id = @user_id,
+                    color = @color
                     WHERE ID = @ID";
             int result = (await conn.ExecuteAsync(query, new
             {
                 name = transactionCategory.Name,
                 user_id = transactionCategory.UserID,
-                ID = transactionCategory.ID
+                ID = transactionCategory.ID,
+                color = transactionCategory.Color
             }
             ));
         }

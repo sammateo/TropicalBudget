@@ -22,7 +22,7 @@
             {
                 {"budgetID", budget.ID.ToString()}
             };
-            <a asp-controller="Transaction" asp-action="Index" asp-all-route-data="@routeData" class=" bg-light p-2" style="cursor:pointer">
+            <a asp-controller="Transaction" asp-action="Index" asp-all-route-data="@routeData" class=" bg-light p-2 fs-5 text-center text-decoration-none" style="cursor:pointer">
                 <span>@budget.Name</span>
             </a>
         }

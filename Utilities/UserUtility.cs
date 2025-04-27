@@ -10,5 +10,10 @@ namespace TropicalBudget.Utilities
             string userID = user.Claims.FirstOrDefault(c => c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
             return userID;
         }
+        internal static string GetUserProfilePhoto(ClaimsPrincipal user)
+        {
+            string profilePhoto = user.Claims.FirstOrDefault(c => c.Type == "picture")?.Value;
+            return profilePhoto;
+        }
     }
 }

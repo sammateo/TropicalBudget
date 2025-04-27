@@ -1,4 +1,5 @@
-﻿@using TropicalBudget.Utilities
+﻿@using Newtonsoft.Json
+@using TropicalBudget.Utilities
 @model Tuple<Guid, List<Transaction>>
 @{
     ViewData["Title"] = "Home Page";
@@ -24,18 +25,31 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">@budgetName</h1>
-    <div class="d-flex justify-content-between align-items-center gap-2">
-        <i class="bi bi-chevron-left fs-4" onclick="previousMonth()" style="cursor:pointer"></i>
-        <p class="fs-5 fw-bold m-0">@currentMonthString</p>
-        <i class="bi bi-chevron-right fs-4" onclick="nextMonth()" style="cursor:pointer"></i>
+    <input class="display-4 budget-name" id="budget_name" onchange="onBudgetNameChange()" value="@budgetName" />
+    <div class="d-flex justify-content-between align-items-center gap-2 my-2">
+        <i class="bi bi-chevron-left fs-4 bg-primary text-white p-2 rounded" onclick="previousMonth()" style="cursor:pointer"></i>
+        <div class="d-flex flex-column gap-2">
+            <p class="fs-5 fw-bold m-0">@currentMonthString</p>
+            <p class="fs-6 fw-normal m-0 text-uppercase">@(transactions.Count) transactions</p>
+        </div>
+        <i class="bi bi-chevron-right fs-4  bg-primary text-white p-2 rounded" onclick="nextMonth()" style="cursor:pointer"></i>
     </div>
     <partial name="~/Views/Home/_SpendingListBanner.cshtml" model="transactions" />
-    <div class="my-2">
+    <div class="my-2 d-flex flex-column gap-2">
         <a class="text-decoration-none border p-2 d-block rounded btn btn-primary" asp-controller="Transaction" asp-action="New" asp-all-route-data="newTransactionRouteData">Add New Transaction</a>
+        <button class="text-decoration-none border p-2 d-block rounded btn btn-outline-danger" onclick="onDeleteBudgetClicked()">Delete Budget</button>
     </div>
 </div>
 
+<div class="d-flex justify-content-center gap-4 fs-4">
+    <span class="bg-light py-1 px-4 rounded-pill" style="cursor:pointer">Spending</span>
+    <span class="bg-light py-1 px-4 rounded-pill" style="cursor:pointer">List</span>
+</div>
+
+<div style="max-width:90vw; width:500px;" class="d-flex mx-auto justify-content-center">
+    <canvas class="" id="donutTransactionCategoriesChart"></canvas>
+
+</div>
 
 <div class="d-flex flex-column gap-2">
     @if (groupedTransactions != null && groupedTransactions.Count > 0)
@@ -69,6 +83,66 @@
 </div>
 
 <script>
+    let transactionCategories =  @Html.Raw(JsonConvert.SerializeObject(transactions));
+
+var ctx = document.getElementById('donutTransactionCategoriesChart').getContext('2d');
+var chart = new Chart(ctx, {
+        type: 'doughnut',
+    data: {
+        labels: transactionCategories.map(cat => cat.CategoryName),
+        datasets: [{
+            label: 'My First dataset',
+                        backgroundColor: transactionCategories.map(cat => cat.CategoryColor),
+            // borderColor: 'rgb(255, 99, 132)',
+             data:transactionCategories.map(cat => cat.Amount)
+        }]
+    },
+    options: {}
+});
+
+</script>
+<script>
+
+    const onBudgetNameChange = ()=> {
+        const budget_name = $("#budget_name");
+        const updated_budget_name = budget_name.val();
+        $.ajax(
+        {
+            type: 'POST',
+            //this url assumes your controller action is in HomeController.cs
+            url: "@Url.Action("UpdateBudgetName", "Home")" ,
+            data: { budgetID: "@budgetID", name: updated_budget_name },
+            success: function (data) {
+                console.log("success");
+            },
+            error: function (ex) {
+                console.log(ex)
+            }
+        });
+    }
+    
+    const onDeleteBudgetClicked = ()=> {
+        const budget_name = $("#budget_name").val();
+        if(confirm(`Are you sure you want to delete budget ${budget_name}?`)){
+            $.ajax(
+            {
+                type: 'DELETE',
+                //this url assumes your controller action is in HomeController.cs
+                url: "@Url.Action("DeleteBudget", "Home")" ,
+                data: { budgetID: "@budgetID"},
+                success: function (data) {
+                    console.log("success");
+                    location.href = "@Url.Action("Index", "Home")";
+                },
+                error: function (ex) {
+                    console.log(ex)
+                }
+            });
+
+        }
+    }
+
+
     const deleteTransaction = (transaction_id) => {
         if(confirm("Are you sure you want to delete this transaction?") == true){
             location.href = "@Url.Action("DeleteTransaction", "Transaction")" +`?budgetID=${"@(budgetID.ToString())"}` + "&transactionID=" + transaction_id;
