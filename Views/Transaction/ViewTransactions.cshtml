@@ -6,6 +6,17 @@
     List<Transaction> transactions = Model.Item2;
     Guid budgetID = Model.Item1;
     List<IGrouping<DateOnly, Transaction>> groupedTransactions = transactions.GroupBy(transaction => DateOnly.FromDateTime(transaction.TransactionDate)).ToList();
+    List<IGrouping<Guid, Transaction>> categoryGroupedExpenses = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).GroupBy(transaction => transaction.CategoryID).ToList();
+    List<Transaction> expensesByCategory = new();
+    foreach (IGrouping<Guid, Transaction> categoryGroupedTransaction in categoryGroupedExpenses){
+        expensesByCategory.Add(new()
+        {
+            CategoryID = categoryGroupedTransaction.Key,
+            Amount = categoryGroupedTransaction.Sum(tran => tran.Amount),
+            CategoryName = categoryGroupedTransaction.First().CategoryName,
+            CategoryColor = categoryGroupedTransaction.First().CategoryColor
+        });
+    }
     string currentMonthString = TempData.ContainsKey("currentMonthString") ? (string)TempData["currentMonthString"] : string.Empty;
     DateTime startDate = (DateTime)TempData["startDate"];
     string budgetName = TempData["BudgetName"].ToString();
@@ -42,64 +53,107 @@
 </div>
 
 <div class="d-flex justify-content-center gap-4 fs-4">
-    <span class="bg-light py-1 px-4 rounded-pill" style="cursor:pointer">Spending</span>
-    <span class="bg-light py-1 px-4 rounded-pill" style="cursor:pointer">List</span>
+    <span id="spendingChartsButton" class="py-1 px-4 rounded-pill bg-primary text-white" onclick="showSpendingCharts()" style="cursor:pointer">Spending</span>
+    <span id="spendingListButton" class="bg-light py-1 px-4 rounded-pill" onclick="showSpendingList()" style="cursor:pointer">List</span>
 </div>
 
-<div style="max-width:90vw; width:500px;" class="d-flex mx-auto justify-content-center">
-    <canvas class="" id="donutTransactionCategoriesChart"></canvas>
+<div id="spendingChartsContainer" >
+    <div style="max-width:90vw; width:500px;" class="d-flex mx-auto my-4 justify-content-center">
+        <canvas class="" id="donutTransactionCategoriesChart"></canvas>
+    </div>
 
 </div>
 
-<div class="d-flex flex-column gap-2">
-    @if (groupedTransactions != null && groupedTransactions.Count > 0)
-    {
-        foreach (IGrouping<DateOnly, Transaction> groupedTransaction in groupedTransactions)
+<div id="spendingListContainer" style="display:none" >
+    <div class="d-flex flex-column gap-2">
+        @if (groupedTransactions != null && groupedTransactions.Count > 0)
         {
-            <div>
-                @{
-                    decimal dailyTotal = TransactionUtility.GetIncome(groupedTransaction.ToList()) - TransactionUtility.GetExpenses(groupedTransaction.ToList());
-                    string dailyTotalPrefix = string.Empty;
-                    if (dailyTotal > 0)
-                        dailyTotalPrefix = "+";
+            foreach (IGrouping<DateOnly, Transaction> groupedTransaction in groupedTransactions)
+            {
+                <div>
+                    @{
+                        decimal dailyTotal = TransactionUtility.GetIncome(groupedTransaction.ToList()) - TransactionUtility.GetExpenses(groupedTransaction.ToList());
+                        string dailyTotalPrefix = string.Empty;
+                        if (dailyTotal > 0)
+                            dailyTotalPrefix = "+";
 
-                }
-                <div class="d-flex justify-content-between align-items-center my-2">
-                    <h2>@groupedTransaction.Key.ToString("yyyy-MM-dd")</h2>
-                    <span>@($"{dailyTotalPrefix}{dailyTotal:c}")</span>
-                </div>
-                <div class="d-flex flex-column gap-2">
-                    @if (groupedTransaction != null && groupedTransaction.ToList().Count > 0)
-                    {
-                        foreach (Transaction transaction in groupedTransaction.ToList())
-                        {
-                            <partial name="~/Views/Transaction/_TransactionCard.cshtml" model="transaction" />
-                        }
                     }
+                    <div class="d-flex justify-content-between align-items-center my-2">
+                        <h2>@groupedTransaction.Key.ToString("yyyy-MM-dd")</h2>
+                        <span>@($"{dailyTotalPrefix}{dailyTotal:c}")</span>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        @if (groupedTransaction != null && groupedTransaction.ToList().Count > 0)
+                        {
+                            foreach (Transaction transaction in groupedTransaction.ToList())
+                            {
+                                <partial name="~/Views/Transaction/_TransactionCard.cshtml" model="transaction" />
+                            }
+                        }
+                    </div>
                 </div>
-            </div>
+            }
         }
-    }
+    </div>
 </div>
 
 <script>
-    let transactionCategories =  @Html.Raw(JsonConvert.SerializeObject(transactions));
+    const currencyFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
-var ctx = document.getElementById('donutTransactionCategoriesChart').getContext('2d');
-var chart = new Chart(ctx, {
+    let transactionCategories =  @Html.Raw(JsonConvert.SerializeObject(expensesByCategory));
+
+    var ctx = document.getElementById('donutTransactionCategoriesChart').getContext('2d');
+    var chart = new Chart(ctx, {
         type: 'doughnut',
-    data: {
-        labels: transactionCategories.map(cat => cat.CategoryName),
-        datasets: [{
-            label: 'My First dataset',
-                        backgroundColor: transactionCategories.map(cat => cat.CategoryColor),
-            // borderColor: 'rgb(255, 99, 132)',
-             data:transactionCategories.map(cat => cat.Amount)
-        }]
-    },
-    options: {}
-});
+        data: {
+            labels: transactionCategories.map(cat => cat.CategoryName),
+            datasets: [{
+                label: 'Expenses',
+                backgroundColor: transactionCategories.map(cat => cat.CategoryColor),
+                //borderColor: 'rgb(255, 99, 132)',
+                 data:transactionCategories.map(cat => cat.Amount)
+            }]
+        },
+        options: {
+            legend: {
+                display:true,
+                responsive:true,
+                position:'bottom'            
+            },
+            tooltips:{
+                callbacks: {
+                    label: function(tooltipItem, data){
+                        let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                        amount = currencyFormatter.format(amount)
+                        let label = data.labels[tooltipItem.index];
+                        return `${label}: ${amount}`;
+                    }
+                }
+            }
+        }
+    });
 
+</script>
+<script>
+
+    const showSpendingCharts = () =>{
+        $("#spendingChartsContainer").show();
+        $("#spendingListContainer").hide();
+        //toggle button colors
+       $("#spendingChartsButton").removeClass("bg-light text-black")
+        $("#spendingChartsButton").addClass("bg-primary text-white")
+        $("#spendingListButton").removeClass("bg-primary text-white");
+        $("#spendingListButton").addClass("bg-light text-black");
+    }
+    const showSpendingList = () =>{
+        $("#spendingChartsContainer").hide();
+        $("#spendingListContainer").show();
+        //toggle button colors
+        $("#spendingListButton").removeClass("bg-light text-black")
+        $("#spendingListButton").addClass("bg-primary text-white")
+        $("#spendingChartsButton").removeClass("bg-primary text-white");
+        $("#spendingChartsButton").addClass("bg-light text-black");
+    }
 </script>
 <script>
 

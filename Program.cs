@@ -1,3 +1,4 @@
+using System.Globalization;
 using Auth0.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using TropicalBudget.Services;
@@ -17,6 +18,11 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
     options.ClientSecret = builder.Configuration["Auth0:ClientSecret"];
     options.Scope = "openid profile email";
 });
+
+CultureInfo culture = new CultureInfo("en-US");
+culture.NumberFormat.CurrencySymbol = "$";
+CultureInfo.DefaultThreadCurrentCulture = culture;
+CultureInfo.DefaultThreadCurrentUICulture = culture;
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
