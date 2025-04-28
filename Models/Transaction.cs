@@ -32,5 +32,7 @@ namespace TropicalBudget.Models
 
         public Guid BudgetID { get; set; }
 
+        public DateTime CreatedAt { get; set; }
+
     }
 }

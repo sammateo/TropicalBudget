@@ -129,7 +129,7 @@ namespace TropicalBudget.Services
 
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT t.id,amount, note, tc.name AS categoryname, tc.color AS categorycolor, ts.name AS sourcename, tt.name AS transactiontype,
-                    transaction_date as transactiondate, category_id AS categoryid, 
+                    transaction_date as transactiondate, category_id AS categoryid, t.created_at AS CreatedAt,
                     source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
                     FROM transactions t
                     LEFT JOIN transaction_category tc ON t.category_id = tc.id

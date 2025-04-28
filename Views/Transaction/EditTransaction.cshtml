@@ -16,8 +16,12 @@
                 @Html.HiddenFor(x => x.ID)
                 @Html.HiddenFor(x => x.BudgetID)
                 @Html.LabelFor(x =>x.Amount)
-                @Html.TextBoxFor(x => x.Amount, new { @placeholder = "Amount", @type = "number", @class = "form-control" })
-                
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">$</span>
+                    </div>
+                    @Html.TextBoxFor(x => x.Amount, new { @placeholder = "Amount", @type = "number", @min = 0, @class = "form-control", @step = "0.01" })
+                </div>
                 @Html.LabelFor(x =>x.CategoryID, "Category")
                 @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID","Name"), new {@class = "form-select"})
                 @Html.LabelFor(x =>x.SourceID, "From")

@@ -5,7 +5,7 @@
     ViewData["Title"] = "Insights";
     List<Transaction> transactions = Model.Item2;
     Guid budgetID = Model.Item1;
-    
+
     string currentMonthString = TempData.ContainsKey("currentMonthString") ? (string)TempData["currentMonthString"] : string.Empty;
     DateTime startDate = (DateTime)TempData["startDate"];
     string budgetName = TempData["BudgetName"].ToString();
@@ -27,14 +27,14 @@
 
     List<IGrouping<Guid, Transaction>> categoryGroupedExpenses = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).GroupBy(transaction => transaction.CategoryID).ToList();
     List<IGrouping<Guid, Transaction>> categoryGroupedIncome = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_INCOME).GroupBy(transaction => transaction.CategoryID).ToList();
-    
+
     List<Transaction> incomeTransactions = transactions.Where(x => x.TransactionType == TransactionUtility.TRANSACTION_TYPE_INCOME).ToList();
     List<Transaction> expenseTransactions = transactions.Where(x => x.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).ToList();
     decimal incomeAmount = incomeTransactions.Sum(x => x.Amount);
     decimal expenseAmount = expenseTransactions.Sum(x => x.Amount);
     decimal balance = incomeAmount - expenseAmount;
-    
-    
+
+
     List<Transaction> expensesByCategory = new();
     List<Transaction> incomeByCategory = new();
     foreach (IGrouping<Guid, Transaction> categoryGroupedTransaction in categoryGroupedExpenses)
@@ -55,6 +55,18 @@
             Amount = categoryGroupedTransaction.Sum(tran => tran.Amount),
             CategoryName = categoryGroupedTransaction.First().CategoryName,
             CategoryColor = categoryGroupedTransaction.First().CategoryColor
+        });
+    }
+
+    //transactions grouped by date
+    List<IGrouping<DateOnly, Transaction>> dateGroupedTransactions = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).GroupBy(transaction => DateOnly.FromDateTime(transaction.TransactionDate)).OrderBy(x => x.Key).ToList();
+    List<Transaction> transactionsByDate = new();
+    foreach (IGrouping<DateOnly, Transaction> dateGroupedTransaction in dateGroupedTransactions)
+    {
+        transactionsByDate.Add(new()
+        {
+            TransactionDate = dateGroupedTransaction.First().TransactionDate,
+            Amount = dateGroupedTransaction.Sum(tran => tran.Amount),
         });
     }
 
@@ -123,8 +135,19 @@
             </div>
         </div>
     </div>
-}
-else{
+    <div>
+        <div class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+            <h3 class="text-center">Spent this month</h3>
+            <div onclick="downloadspentThisMonthChart()" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" style="cursor:pointer">
+                <span>Export</span>
+                <i class="bi bi-box-arrow-down"></i>
+            </div>
+        </div>
+        <div style="max-width:90vw; width:850px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+            <canvas class="" id="transactionsByDateLineChart"></canvas>
+        </div>
+    </div>
+}else{
         <div class="d-flex flex-column align-items-center justify-content-center my-5">
             <h2 class="text-center">No Transactions</h2>
                 <i class="bi bi-file-earmark-excel" style="font-size:4rem;"></i>
@@ -151,6 +174,16 @@ else{
             a.click();
         }
     }
+    
+    const downloadspentThisMonthChart = () => {
+        var a = document.createElement('a');
+        a.href = transactionsByDateLineChart.toBase64Image();
+        a.download = 'Spent This Month.png';
+        // Trigger the download
+        if(confirm('Do you want to download this chart?')){
+            a.click();
+        }
+    }
 </script>
 
 
@@ -159,6 +192,7 @@ else{
 
     let expensesCategories =  @Html.Raw(JsonConvert.SerializeObject(expensesByCategory));
     let incomeCategories =  @Html.Raw(JsonConvert.SerializeObject(incomeByCategory));
+    let transactionsByDate =  @Html.Raw(JsonConvert.SerializeObject(transactionsByDate));
     //expense categories
     var transactionCategoriesCtx = document.getElementById('donutTransactionCategoriesChart').getContext('2d');
     var expenseChart = new Chart(transactionCategoriesCtx, {
@@ -255,6 +289,51 @@ else{
             y: {
                 beginAtZero: true,
                 min:0,
+            },
+        }
+        },
+        
+    });
+    
+    //transactions by date line chart 
+    var itransactionsByDateLineChartCtx = document.getElementById('transactionsByDateLineChart').getContext('2d');
+    var transactionsByDateLineChart = new Chart(itransactionsByDateLineChartCtx, {
+        type: 'line',
+        data: {
+            labels: transactionsByDate.map(transaction => new Date(transaction.TransactionDate).toLocaleDateString('en-us',{year:"numeric", month:"short", day:"numeric"})),
+            datasets: [{
+                label: 'Income',
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: '#0d6efd',
+                 data:transactionsByDate.map(transaction => transaction.Amount),
+                 fill: false,
+            }]
+        },
+        options: {
+            legend: {
+                display:false,
+                responsive:true,
+                position:'bottom'
+            },
+            tooltips:{
+                callbacks: {
+                    label: function(tooltipItem, data){
+                        let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                        amount = currencyFormatter.format(amount)
+                        let label = data.labels[tooltipItem.index];
+                        return `${label}: ${amount}`;
+                    }
+                }
+            },
+            scales:{
+            y: {
+                beginAtZero: true,
+                min:0,
+                ticks:{
+                    callback: function(value, index, ticks) {
+                        return '$' + value;
+                    }
+                },
             },
         }
         },
