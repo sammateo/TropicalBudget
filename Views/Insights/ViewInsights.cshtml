@@ -62,13 +62,19 @@
 
 <div class="text-center">
     <h2 class="fs-1">Insights: @budgetName</h2>
-    <div class="d-flex justify-content-between align-items-center gap-2 p-1 my-2 border border-primary rounded-pill">
-        <i class="bi bi-chevron-left fs-4 bg-primary text-white py-3 px-4 px-lg-5 rounded-pill" onclick="previousMonth()" style="cursor:pointer"></i>
+    <div class="d-flex justify-content-between align-items-center gap-2 p-1 my-2 rounded-pill">
+        <div onclick="previousMonth()" style="cursor:pointer" class="btn-outline-primary border border-primary d-flex align-items-center py-1 px-4 rounded-pill">
+            <i class="bi bi-chevron-left fs-4" style="cursor:pointer"></i>
+            <span class="d-none d-sm-block">@(startDate.AddMonths(-1).ToString("MMMM, yyyy"))</span>
+        </div>
         <div class="d-flex flex-column gap-2">
             <p class="fs-5 fw-bold m-0">@currentMonthString</p>
             <p class="fs-6 fw-normal m-0 text-uppercase">@(transactions.Count) transactions</p>
         </div>
-        <i class="bi bi-chevron-right fs-4 bg-primary text-white py-3 px-4 px-lg-5 rounded-pill" onclick="nextMonth()" style="cursor:pointer"></i>
+        <div onclick="nextMonth()" style="cursor:pointer" class="bg-primary d-flex align-items-center text-white py-1 px-4 rounded-pill">
+            <span class="d-none d-sm-block">@(startDate.AddMonths(1).ToString("MMMM, yyyy"))</span>
+            <i class="bi bi-chevron-right fs-4"></i>
+        </div>
     </div>
     <partial name="~/Views/Home/_SpendingListBanner.cshtml" model="transactions" />
 </div>
