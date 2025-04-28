@@ -14,7 +14,7 @@
 </div>
 
 @if(transactionCategories != null && transactionCategories.Count > 0) {
-    <div class="d-flex flex-column gap-2 bg-light p-2 rounded">
+    <div class="d-flex flex-column gap-2 rounded">
         @foreach(TransactionCategory transactionCategory in transactionCategories){
             <partial name="~/Views/Category/_TransactionCategoryCard.cshtml" model="transactionCategory" />
         }
