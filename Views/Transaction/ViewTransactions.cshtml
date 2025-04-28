@@ -2,7 +2,7 @@
 @using TropicalBudget.Utilities
 @model Tuple<Guid, List<Transaction>>
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Budget";
     List<Transaction> transactions = Model.Item2;
     Guid budgetID = Model.Item1;
     List<IGrouping<DateOnly, Transaction>> groupedTransactions = transactions.GroupBy(transaction => DateOnly.FromDateTime(transaction.TransactionDate)).ToList();
@@ -29,6 +29,12 @@
     {
         {"budgetID", budgetID.ToString()}
     };
+    Dictionary<string, string> fullTransactionRouteData = new()
+    {
+        {"budgetID", budgetID.ToString()},
+        {"year", startDate.Year.ToString()},
+        {"month", startDate.Month.ToString()},
+    };
 
     if (groupedTransactions != null)
         groupedTransactions = groupedTransactions.OrderByDescending(group => group.Key).ToList();
@@ -46,25 +52,31 @@
         <i class="bi bi-chevron-right fs-4  bg-primary text-white p-2 rounded" onclick="nextMonth()" style="cursor:pointer"></i>
     </div>
     <partial name="~/Views/Home/_SpendingListBanner.cshtml" model="transactions" />
-    <div class="my-2 d-flex flex-column gap-2">
-        <a class="text-decoration-none border p-2 d-block rounded btn btn-primary" asp-controller="Transaction" asp-action="New" asp-all-route-data="newTransactionRouteData">Add New Transaction</a>
-        <button class="text-decoration-none border p-2 d-block rounded btn btn-outline-danger" onclick="onDeleteBudgetClicked()">Delete Budget</button>
-    </div>
-</div>
-
-<div class="d-flex justify-content-center gap-4 fs-4">
-    <span id="spendingChartsButton" class="py-1 px-4 rounded-pill bg-primary text-white" onclick="showSpendingCharts()" style="cursor:pointer">Spending</span>
-    <span id="spendingListButton" class="bg-light py-1 px-4 rounded-pill" onclick="showSpendingList()" style="cursor:pointer">List</span>
-</div>
-
-<div id="spendingChartsContainer" >
-    <div style="max-width:90vw; width:500px;" class="d-flex mx-auto my-4 justify-content-center">
-        <canvas class="" id="donutTransactionCategoriesChart"></canvas>
-    </div>
 
 </div>
 
-<div id="spendingListContainer" style="display:none" >
+@* Button row *@
+<div class="d-flex flex-wrap justify-content-end align-items-center gap-2 my-3">
+    <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-primary border" asp-controller="Transaction" asp-action="New" asp-all-route-data="newTransactionRouteData">
+		<span>Add New Transaction</span>
+        <i class="bi bi-plus-circle"></i>
+    </a>
+	<a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-primary border border-primary" asp-controller="Transaction" asp-action="Index" asp-all-route-data="newTransactionRouteData">
+        <span>Today</span>
+        <i class="bi bi-calendar-check"></i>
+    </a>
+    <a id="spendingListButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success" asp-controller="Insights" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
+        <span>Insights</span>
+        <i class="bi bi-graph-up-arrow"></i>
+    </a>
+	<button class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn btn-outline-danger border border-danger" onclick="onDeleteBudgetClicked()">
+        <span>Delete Budget</span>
+        <i class="bi bi-trash"></i>
+    </button>
+
+</div>
+
+<div id="spendingListContainer"  >
     <div class="d-flex flex-column gap-2">
         @if (groupedTransactions != null && groupedTransactions.Count > 0)
         {
@@ -97,64 +109,6 @@
     </div>
 </div>
 
-<script>
-    const currencyFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
-
-    let transactionCategories =  @Html.Raw(JsonConvert.SerializeObject(expensesByCategory));
-
-    var ctx = document.getElementById('donutTransactionCategoriesChart').getContext('2d');
-    var chart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: transactionCategories.map(cat => cat.CategoryName),
-            datasets: [{
-                label: 'Expenses',
-                backgroundColor: transactionCategories.map(cat => cat.CategoryColor),
-                //borderColor: 'rgb(255, 99, 132)',
-                 data:transactionCategories.map(cat => cat.Amount)
-            }]
-        },
-        options: {
-            legend: {
-                display:true,
-                responsive:true,
-                position:'bottom'            
-            },
-            tooltips:{
-                callbacks: {
-                    label: function(tooltipItem, data){
-                        let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
-                        amount = currencyFormatter.format(amount)
-                        let label = data.labels[tooltipItem.index];
-                        return `${label}: ${amount}`;
-                    }
-                }
-            }
-        }
-    });
-
-</script>
-<script>
-
-    const showSpendingCharts = () =>{
-        $("#spendingChartsContainer").show();
-        $("#spendingListContainer").hide();
-        //toggle button colors
-       $("#spendingChartsButton").removeClass("bg-light text-black")
-        $("#spendingChartsButton").addClass("bg-primary text-white")
-        $("#spendingListButton").removeClass("bg-primary text-white");
-        $("#spendingListButton").addClass("bg-light text-black");
-    }
-    const showSpendingList = () =>{
-        $("#spendingChartsContainer").hide();
-        $("#spendingListContainer").show();
-        //toggle button colors
-        $("#spendingListButton").removeClass("bg-light text-black")
-        $("#spendingListButton").addClass("bg-primary text-white")
-        $("#spendingChartsButton").removeClass("bg-primary text-white");
-        $("#spendingChartsButton").addClass("bg-light text-black");
-    }
-</script>
 <script>
 
     const onBudgetNameChange = ()=> {

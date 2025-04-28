@@ -1,0 +1,224 @@
+﻿@using Newtonsoft.Json
+@using TropicalBudget.Utilities
+@model Tuple<Guid, List<Transaction>>
+@{
+    ViewData["Title"] = "Insights";
+    List<Transaction> transactions = Model.Item2;
+    Guid budgetID = Model.Item1;
+    
+    string currentMonthString = TempData.ContainsKey("currentMonthString") ? (string)TempData["currentMonthString"] : string.Empty;
+    DateTime startDate = (DateTime)TempData["startDate"];
+    string budgetName = TempData["BudgetName"].ToString();
+    int nextMonth = startDate.AddMonths(1).Month;
+    int nextYear = startDate.AddMonths(1).Year;
+    int previousMonth = startDate.AddMonths(-1).Month;
+    int previousYear = startDate.AddMonths(-1).Year;
+
+    Dictionary<string, string> newTransactionRouteData = new()
+    {
+        {"budgetID", budgetID.ToString()}
+    };
+    Dictionary<string, string> fullTransactionRouteData = new()
+    {
+        {"budgetID", budgetID.ToString()},
+        {"year", startDate.Year.ToString()},
+        {"month", startDate.Month.ToString()},
+    };
+
+    List<IGrouping<Guid, Transaction>> categoryGroupedExpenses = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).GroupBy(transaction => transaction.CategoryID).ToList();
+    List<IGrouping<Guid, Transaction>> categoryGroupedIncome = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_INCOME).GroupBy(transaction => transaction.CategoryID).ToList();
+    
+    List<Transaction> incomeTransactions = transactions.Where(x => x.TransactionType == TransactionUtility.TRANSACTION_TYPE_INCOME).ToList();
+    List<Transaction> expenseTransactions = transactions.Where(x => x.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).ToList();
+    decimal incomeAmount = incomeTransactions.Sum(x => x.Amount);
+    decimal expenseAmount = expenseTransactions.Sum(x => x.Amount);
+    decimal balance = incomeAmount - expenseAmount;
+    
+    
+    List<Transaction> expensesByCategory = new();
+    List<Transaction> incomeByCategory = new();
+    foreach (IGrouping<Guid, Transaction> categoryGroupedTransaction in categoryGroupedExpenses)
+    {
+        expensesByCategory.Add(new()
+        {
+            CategoryID = categoryGroupedTransaction.Key,
+            Amount = categoryGroupedTransaction.Sum(tran => tran.Amount),
+            CategoryName = categoryGroupedTransaction.First().CategoryName,
+            CategoryColor = categoryGroupedTransaction.First().CategoryColor
+        });
+    }
+    foreach (IGrouping<Guid, Transaction> categoryGroupedTransaction in categoryGroupedIncome)
+    {
+        incomeByCategory.Add(new()
+        {
+            CategoryID = categoryGroupedTransaction.Key,
+            Amount = categoryGroupedTransaction.Sum(tran => tran.Amount),
+            CategoryName = categoryGroupedTransaction.First().CategoryName,
+            CategoryColor = categoryGroupedTransaction.First().CategoryColor
+        });
+    }
+
+}
+
+<div class="text-center">
+    <h2 class="fs-1">Insights: @budgetName</h2>
+    <div class="d-flex justify-content-between align-items-center gap-2 my-2">
+        <i class="bi bi-chevron-left fs-4 bg-primary text-white p-2 rounded" onclick="previousMonth()" style="cursor:pointer"></i>
+        <div class="d-flex flex-column gap-2">
+            <p class="fs-5 fw-bold m-0">@currentMonthString</p>
+            <p class="fs-6 fw-normal m-0 text-uppercase">@(transactions.Count) transactions</p>
+        </div>
+        <i class="bi bi-chevron-right fs-4  bg-primary text-white p-2 rounded" onclick="nextMonth()" style="cursor:pointer"></i>
+    </div>
+    <partial name="~/Views/Home/_SpendingListBanner.cshtml" model="transactions" />
+</div>
+
+@* Button row *@
+<div class="d-flex flex-wrap justify-content-end align-items-center gap-2 my-3">
+    <a id="spendingListButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" asp-controller="Transaction" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
+        <span>Budget</span>
+        <i class="bi bi-card-list"></i>
+    </a>
+</div>
+
+
+<div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+    <canvas class="" id="incomeExpenseBarChart"></canvas>
+</div>
+
+<div class="d-xl-flex justify-content-center">
+    <div id="spendingChartsContainer">
+        <h3 class="text-center">Expenses</h3>
+        <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+            <canvas class="" id="donutTransactionCategoriesChart"></canvas>
+        </div>
+    </div>
+
+    <div id="incomeChartsContainer">
+        <h3 class="text-center">Income</h3>
+        <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+            <canvas class="" id="donutIncomeCategoriesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+    const currencyFormatter = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+
+    let expensesCategories =  @Html.Raw(JsonConvert.SerializeObject(expensesByCategory));
+    let incomeCategories =  @Html.Raw(JsonConvert.SerializeObject(incomeByCategory));
+    //expense categories
+    var transactionCategoriesCtx = document.getElementById('donutTransactionCategoriesChart').getContext('2d');
+    var expenseChart = new Chart(transactionCategoriesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: expensesCategories.map(cat => cat.CategoryName),
+            datasets: [{
+                label: 'Expenses',
+                backgroundColor: expensesCategories.map(cat => cat.CategoryColor),
+                //borderColor: 'rgb(255, 99, 132)',
+                 data:expensesCategories.map(cat => cat.Amount)
+            }]
+        },
+        options: {
+            legend: {
+                display:true,
+                responsive:true,
+                position:'bottom'
+            },
+            tooltips:{
+                callbacks: {
+                    label: function(tooltipItem, data){
+                        let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                        amount = currencyFormatter.format(amount)
+                        let label = data.labels[tooltipItem.index];
+                        return `${label}: ${amount}`;
+                    }
+                }
+            }
+        }
+    });
+
+    //income categories
+    var incomeCategoriesCtx = document.getElementById('donutIncomeCategoriesChart').getContext('2d');
+    var incomeChart = new Chart(incomeCategoriesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: incomeCategories.map(cat => cat.CategoryName),
+            datasets: [{
+                label: 'Income',
+                backgroundColor: incomeCategories.map(cat => cat.CategoryColor),
+                //borderColor: 'rgb(255, 99, 132)',
+                 data:incomeCategories.map(cat => cat.Amount)
+            }]
+        },
+        options: {
+            legend: {
+                display:true,
+                responsive:true,
+                position:'bottom'
+            },
+            tooltips:{
+                callbacks: {
+                    label: function(tooltipItem, data){
+                        let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                        amount = currencyFormatter.format(amount)
+                        let label = data.labels[tooltipItem.index];
+                        return `${label}: ${amount}`;
+                    }
+                }
+            }
+        }
+    });
+
+    //budget expense/income bar chart 
+    var incomeExpenseBarChartCtx = document.getElementById('incomeExpenseBarChart').getContext('2d');
+    var incomeExpenseBarChart = new Chart(incomeExpenseBarChartCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Income','Expense','Balance'],
+            datasets: [{
+                label: 'Income',
+                backgroundColor: ['#4BB543','#FF0000','#0d6efd'],
+                 data:[@incomeAmount, @expenseAmount, @balance]
+            }]
+        },
+        options: {
+            legend: {
+                display:false,
+                responsive:true,
+                position:'bottom'
+            },
+            tooltips:{
+                callbacks: {
+                    label: function(tooltipItem, data){
+                        let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                        amount = currencyFormatter.format(amount)
+                        let label = data.labels[tooltipItem.index];
+                        return `${label}: ${amount}`;
+                    }
+                }
+            },
+            scales:{
+            y: {
+                beginAtZero: true,
+                min:0,
+            },
+        }
+        },
+        
+    });
+
+</script>
+
+<script>
+    const nextMonth = () =>{
+            location.href = "@Url.Action("Index", "Insights")" + `?budgetID=${"@(budgetID.ToString())"}&year=${@(nextYear)}&month=${@(nextMonth)}`;
+        }
+        const previousMonth = () =>{
+            location.href = "@Url.Action("Index", "Insights")" + `?budgetID=${"@(budgetID.ToString())"}&year=${@(previousYear)}&month=${@(previousMonth)}`;
+        }
+</script>

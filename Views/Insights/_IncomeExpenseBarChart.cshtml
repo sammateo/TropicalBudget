@@ -1,0 +1,15 @@
+﻿@model List<Transaction>
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    List<Transaction> incomeTransactions = Model.Where(x => x.TransactionType == "Income").ToList();
+    List<Transaction> expenseTransactions = Model.Where(x => x.TransactionType == "Expense").ToList();
+    decimal incomeAmount = incomeTransactions.Sum(x => x.Amount);
+    decimal expenseAmount = expenseTransactions.Sum(x => x.Amount);
+    decimal balance = incomeAmount - expenseAmount;
+}
+
+<div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+    <canvas class="" id="incomeExpenseBarChart"></canvas>
+</div>
