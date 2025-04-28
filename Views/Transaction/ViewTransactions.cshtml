@@ -43,13 +43,13 @@
 
 <div class="text-center">
     <input class="display-4 budget-name" id="budget_name" onchange="onBudgetNameChange()" value="@budgetName" />
-    <div class="d-flex justify-content-between align-items-center gap-2 my-2">
-        <i class="bi bi-chevron-left fs-4 bg-primary text-white p-2 rounded" onclick="previousMonth()" style="cursor:pointer"></i>
+    <div class="d-flex justify-content-between align-items-center gap-2 p-1 my-2 border border-primary rounded-pill">
+        <i class="bi bi-chevron-left fs-4 bg-primary text-white py-3 px-4 px-lg-5 rounded-pill" onclick="previousMonth()" style="cursor:pointer"></i>
         <div class="d-flex flex-column gap-2">
             <p class="fs-5 fw-bold m-0">@currentMonthString</p>
             <p class="fs-6 fw-normal m-0 text-uppercase">@(transactions.Count) transactions</p>
         </div>
-        <i class="bi bi-chevron-right fs-4  bg-primary text-white p-2 rounded" onclick="nextMonth()" style="cursor:pointer"></i>
+        <i class="bi bi-chevron-right fs-4 bg-primary text-white py-3 px-4 px-lg-5 rounded-pill" onclick="nextMonth()" style="cursor:pointer"></i>
     </div>
     <partial name="~/Views/Home/_SpendingListBanner.cshtml" model="transactions" />
 
@@ -105,6 +105,12 @@
                     </div>
                 </div>
             }
+        }
+        else{
+            <div class="d-flex flex-column align-items-center justify-content-center my-5">
+                <h2 class="text-center">No Transactions</h2>
+                <i class="bi bi-file-earmark-text" style="font-size:4rem;"></i>
+            </div>
         }
     </div>
 </div>

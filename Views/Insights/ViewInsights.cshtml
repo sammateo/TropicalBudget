@@ -62,47 +62,90 @@
 
 <div class="text-center">
     <h2 class="fs-1">Insights: @budgetName</h2>
-    <div class="d-flex justify-content-between align-items-center gap-2 my-2">
-        <i class="bi bi-chevron-left fs-4 bg-primary text-white p-2 rounded" onclick="previousMonth()" style="cursor:pointer"></i>
+    <div class="d-flex justify-content-between align-items-center gap-2 p-1 my-2 border border-primary rounded-pill">
+        <i class="bi bi-chevron-left fs-4 bg-primary text-white py-3 px-4 px-lg-5 rounded-pill" onclick="previousMonth()" style="cursor:pointer"></i>
         <div class="d-flex flex-column gap-2">
             <p class="fs-5 fw-bold m-0">@currentMonthString</p>
             <p class="fs-6 fw-normal m-0 text-uppercase">@(transactions.Count) transactions</p>
         </div>
-        <i class="bi bi-chevron-right fs-4  bg-primary text-white p-2 rounded" onclick="nextMonth()" style="cursor:pointer"></i>
+        <i class="bi bi-chevron-right fs-4 bg-primary text-white py-3 px-4 px-lg-5 rounded-pill" onclick="nextMonth()" style="cursor:pointer"></i>
     </div>
     <partial name="~/Views/Home/_SpendingListBanner.cshtml" model="transactions" />
 </div>
 
 @* Button row *@
 <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 my-3">
+    <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-primary border border-primary" asp-controller="Insights" asp-action="Index" asp-all-route-data="newTransactionRouteData">
+        <span>Today</span>
+        <i class="bi bi-calendar-check"></i>
+    </a>
     <a id="spendingListButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" asp-controller="Transaction" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
         <span>Budget</span>
         <i class="bi bi-card-list"></i>
     </a>
 </div>
 
-
-<div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
-    <canvas class="" id="incomeExpenseBarChart"></canvas>
-</div>
-
-<div class="d-xl-flex justify-content-center">
-    <div id="spendingChartsContainer">
-        <h3 class="text-center">Expenses</h3>
-        <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
-            <canvas class="" id="donutTransactionCategoriesChart"></canvas>
-        </div>
+@if(transactions != null && transactions.Count > 0){
+    <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+        <canvas class="" id="incomeExpenseBarChart"></canvas>
     </div>
 
-    <div id="incomeChartsContainer">
-        <h3 class="text-center">Income</h3>
-        <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
-            <canvas class="" id="donutIncomeCategoriesChart"></canvas>
+    <div class="d-xl-flex gap-4 justify-content-center">
+        <div id="spendingChartsContainer">
+            <div class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+                <h3 class="text-center">Expenses</h3>
+                    <div onclick="downloadExpenseCategoryChart()" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" style="cursor:pointer">
+                        <span>Export</span>
+                         <i class="bi bi-box-arrow-down"></i>
+                    </div>
+            </div>
+            <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+                <canvas class="" id="donutTransactionCategoriesChart"></canvas>
+            </div>
+        </div>
+
+        <div id="incomeChartsContainer">
+            <div class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+                <h3 class="text-center">Income</h3>
+                        <div onclick="downloadIncomeCategoryChart()" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" style="cursor:pointer">
+                        <span>Export</span>
+                         <i class="bi bi-box-arrow-down"></i>
+                    </div>
+            </div>
+            <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+                <canvas class="" id="donutIncomeCategoriesChart"></canvas>
+            </div>
         </div>
     </div>
-</div>
+}
+else{
+        <div class="d-flex flex-column align-items-center justify-content-center my-5">
+            <h2 class="text-center">No Transactions</h2>
+            <i class="bi bi-file-earmark-text" style="font-size:4rem;"></i>
+        </div>
+}
 
 
+<script>
+    const downloadIncomeCategoryChart = () => {
+        var a = document.createElement('a');
+        a.href = incomeChart.toBase64Image();
+        a.download = 'Income Category.png';
+        // Trigger the download
+        if(confirm('Do you want to download this chart?')){
+            a.click();
+        }
+    }
+    const downloadExpenseCategoryChart = () => {
+        var a = document.createElement('a');
+        a.href = expenseChart.toBase64Image();
+        a.download = 'Expense Category.png';
+        // Trigger the download
+        if(confirm('Do you want to download this chart?')){
+            a.click();
+        }
+    }
+</script>
 
 
 <script>
