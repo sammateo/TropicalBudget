@@ -102,6 +102,9 @@
                         @if (groupedTransaction.Key == DateOnly.FromDateTime(DateTime.Today)){
                             <h2>Today</h2>
                         }
+                        else if (groupedTransaction.Key == DateOnly.FromDateTime(DateTime.Today.AddDays(+1))){
+                            <h2>Tomorrow</h2>
+                        }
                         else if (groupedTransaction.Key == DateOnly.FromDateTime(DateTime.Today.AddDays(-1))){
                             <h2>Yesterday</h2>
                         }

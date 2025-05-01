@@ -13,7 +13,7 @@
             <div class="d-flex flex-column gap-2">
                 @Html.HiddenFor(x => x.ID)
                 @Html.LabelFor(x => x.Name)
-                @Html.TextBoxFor(x => x.Name, new { @placeholder = "Source Name", @class = "form-control" })
+                @Html.TextBoxFor(x => x.Name, new { @placeholder = "Source Name", @class = "form-control", @required = true })
                 @*  @Html.LabelFor(x => x.Color)
                 @Html.TextBoxFor(x => x.Color, new {@type ="color", @class="bg-light rounded border border-grey", @style="width:100%"}) *@
 

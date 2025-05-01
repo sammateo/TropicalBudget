@@ -12,7 +12,7 @@
             ;
             <div class="d-flex flex-column gap-2">
                 @Html.LabelFor(x => x.Name)
-                @Html.TextBoxFor(x => x.Name, new { @placeholder = "Name", @type = "text", @class = "form-control" })
+                @Html.TextBoxFor(x => x.Name, new { @placeholder = "Name", @type = "text", @class = "form-control", @required=true })
                 <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
                 <input type="button" name="ExitButton" onclick="navigateToHome()" class="btn btn-outline-primary" value="Exit" />
 

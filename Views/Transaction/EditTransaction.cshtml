@@ -20,16 +20,28 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text">$</span>
                     </div>
-                    @Html.TextBoxFor(x => x.Amount, new { @placeholder = "Amount", @type = "number", @min = 0, @class = "form-control", @step = "0.01" })
+                    @Html.TextBoxFor(x => x.Amount, new { @placeholder = "Amount", @type = "number", @min = 0, @class = "form-control", @step = "0.01", @required = true })
                 </div>
+                @if (transactionCategories == null || transactionCategories.Count <= 0)
+                {
+                            <div class="alert alert-danger" role="alert">
+                                No categories available. Please <a asp-controller="Category" asp-action="Index">add a category</a> first.
+                            </div>
+                }
                 @Html.LabelFor(x =>x.CategoryID, "Category")
-                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID","Name"), new {@class = "form-select"})
+                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID","Name"), new {@class = "form-select", @required = true})
+                @if (transactionSources == null || transactionSources.Count <= 0)
+                {
+                            <div class="alert alert-danger" role="alert">
+                                No sources available. Please <a asp-controller="Sources" asp-action="Index">add a source</a> first.
+                            </div>
+                }
                 @Html.LabelFor(x =>x.SourceID, "From")
-                @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"), new { @class = "form-select" })
+                @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"), new { @class = "form-select", @required = true })
                 @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
-                @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select" })
+                @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select", @required = true })
                 @Html.LabelFor(x => x.TransactionDate, "Date")
-                @Html.TextBoxFor(x => x.TransactionDate, "{0:yyyy-MM-dd}", new { @type="date", @class = "form-control" })
+                @Html.TextBoxFor(x => x.TransactionDate, "{0:yyyy-MM-dd}", new { @type = "date", @class = "form-control", @required = true })
                 @Html.LabelFor(x => x.Note)
                 @Html.TextBoxFor(x => x.Note, new { @placeholder = "Note", @type = "text", @class = "form-control" })
 
