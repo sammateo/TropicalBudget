@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TropicalBudget.Models;
 using TropicalBudget.Services;
 using TropicalBudget.Utilities;
 
 namespace TropicalBudget.Controllers
 {
+    [Authorize]
     public class SourcesController : Controller
     {
         private readonly DatabaseService _db;
