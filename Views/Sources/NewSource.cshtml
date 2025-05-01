@@ -1,0 +1,31 @@
+﻿@model TransactionSource
+@{
+    ViewData["Title"] = "New Source";
+}
+
+<div class="text-center">
+    <h1 class="display-4">New Source</h1>
+    <div>
+        @using (Html.BeginForm("AddNewSource", "Sources"))
+        {
+            @Html.AntiForgeryToken()
+            ;
+            <div class="d-flex flex-column gap-2">
+                @Html.LabelFor(x => x.Name)
+                @Html.TextBoxFor(x => x.Name, new { @placeholder = "Source Name", @class = "form-control" })
+                @* @Html.LabelFor(x => x.Color)
+                @Html.TextBoxFor(x => x.Color, new { @type = "color", @class = "bg-light rounded border border-grey", @style = "width:100%" }) *@
+
+                <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
+                <input type="button" name="ExitButton" onclick="navigateToHome()" class="btn btn-outline-primary" value="Exit" />
+
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    const navigateToHome = () =>{
+        location.href = "@Url.Action("Index", "Sources")";
+    }
+</script>

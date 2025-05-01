@@ -55,7 +55,7 @@ namespace TropicalBudget.Controllers
         {
             string userID = UserUtility.GetUserID(User);
             List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
-            List<TransactionSource> transactionSources = await _db.GetTransactionSources();
+            List<TransactionSource> transactionSources = await _db.GetTransactionSources(userID);
             List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
             TempData["TransactionCategories"] = transactionCategories;
             TempData["TransactionSources"] = transactionSources;
@@ -74,7 +74,7 @@ namespace TropicalBudget.Controllers
         {
             string userID = UserUtility.GetUserID(User);
             List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
-            List<TransactionSource> transactionSources = await _db.GetTransactionSources();
+            List<TransactionSource> transactionSources = await _db.GetTransactionSources(userID);
             List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
             TempData["TransactionCategories"] = transactionCategories;
             TempData["TransactionSources"] = transactionSources;

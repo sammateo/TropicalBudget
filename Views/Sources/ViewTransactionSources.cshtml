@@ -1,0 +1,39 @@
+﻿@model List<TransactionSource>
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "Sources";
+    List<TransactionSource> transactionSources = Model;
+}
+<div class="text-center">
+    <h1 class="display-4">Manage Your Transaction Sources</h1>
+    <div class="my-4">
+        <a class="text-decoration-none border p-2 d-block rounded btn btn-primary" asp-controller="Sources" asp-action="Add">Add New Source</a>
+    </div>
+</div>
+
+@if (transactionSources != null && transactionSources.Count > 0)
+{
+    <div class="d-flex flex-column gap-2 rounded">
+        @foreach (TransactionSource transactionSource in transactionSources)
+        {
+
+            <partial name="~/Views/Sources/_TransactionSourceCard.cshtml" model="transactionSource" />
+        }
+    </div>
+}
+
+
+<script>
+    const editTransactionSource = (transaction_source_id) => {
+        location.href = "@Url.Action("Edit", "Sources")" +"?sourceID=" + transaction_source_id;
+
+    }
+
+    const deleteTransactionSource = (transaction_source_id) => {
+        if(confirm("Are you sure you want to delete this source?") == true){
+            location.href = "@Url.Action("DeleteSource", "Sources")" +"?sourceID=" + transaction_source_id;
+        }
+    }
+</script>

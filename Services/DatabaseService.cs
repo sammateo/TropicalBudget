@@ -287,6 +287,61 @@ namespace TropicalBudget.Services
             users = (await conn.QueryAsync<TransactionSource>(query)).ToList();
             return users;
         }
+        
+        public async Task<List<TransactionSource>> GetTransactionSources(string userID)
+        {
+            var users = new List<TransactionSource>();
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT id, name, user_id AS userid
+                    FROM transaction_source WHERE user_id = @userID";
+            users = (await conn.QueryAsync<TransactionSource>(query, new { userID })).ToList();
+            return users;
+        }
+        public async Task<TransactionSource> GetTransactionSource(Guid sourceID, string userID)
+        {
+            var users = new TransactionSource();
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT id, name, user_id AS userid
+                    FROM transaction_source WHERE id = @sourceID AND user_id = @userID";
+            users = (await conn.QueryAsync<TransactionSource>(query, new { sourceID, userID })).SingleOrDefault();
+            return users;
+        }
+
+        public async Task InsertTransactionSource(TransactionSource transactionSource)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"INSERT INTO transaction_source
+                (name, user_id)
+                VALUES 
+                (@name, @user_id)";
+            int result = (await conn.ExecuteAsync(query, new { name = transactionSource.Name, user_id = transactionSource.UserId }));
+        }
+
+        public async Task UpdateTransactionSource(TransactionSource transactionsource)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"UPDATE transaction_source 
+                SET name = @name,
+                    user_id = @user_id
+                    WHERE ID = @ID";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                name = transactionsource.Name,
+                user_id = transactionsource.UserId,
+                ID = transactionsource.ID            
+            }
+            ));
+        }
+
+        public async Task DeleteTransactionSource(Guid sourceID, string userID)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"DELETE FROM transaction_source WHERE ID = @sourceID AND user_id = @userID";
+            int result = (await conn.ExecuteAsync(query, new { sourceID, userID }));
+        }
+
         #endregion
 
         #region Types
