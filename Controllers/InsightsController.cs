@@ -41,7 +41,7 @@ namespace TropicalBudget.Controllers
             TempData["currentMonthString"] = currentMonth;
             TempData["startDate"] = startDate;
             Budget budget = await _db.GetBudget(userID, budgetID);
-            TempData["BudgetName"] = budget.Name;
+            TempData["BudgetName"] = budget != null && !string.IsNullOrWhiteSpace(budget.Name) ? budget.Name : "Unknown";
             List<Transaction> transactions = await _db.GetTransactions(budgetID, startDate, endDate);
             Tuple<Guid, List<Transaction>> budgetTransactions = new(budgetID, transactions);
             return View("ViewInsights", budgetTransactions);
