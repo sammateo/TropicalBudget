@@ -1,10 +1,43 @@
 using System.Globalization;
 using Auth0.AspNetCore.Authentication;
+using Grafana.OpenTelemetry;
 using Microsoft.AspNetCore.HttpOverrides;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using TropicalBudget.Services;
 using TropicalBudget.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(configure =>
+    {
+        configure.UseGrafana()
+            .AddConsoleExporter();
+    })
+    .WithMetrics(configure =>
+    {
+        configure.UseGrafana()
+            .AddConsoleExporter();
+    });
+builder.Logging.AddOpenTelemetry(options =>
+{
+    options.UseGrafana()
+        .AddConsoleExporter();
+});
+Environment.SetEnvironmentVariable("OTEL_RESOURCE_ATTRIBUTES", builder.Configuration["Grafana:OTEL_RESOURCE_ATTRIBUTES"]);
+Environment.SetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT", builder.Configuration["Grafana:OTEL_EXPORTER_OTLP_ENDPOINT"]);
+Environment.SetEnvironmentVariable("OTEL_EXPORTER_OTLP_HEADERS", builder.Configuration["Grafana:OTEL_EXPORTER_OTLP_HEADERS"]);
+Environment.SetEnvironmentVariable("OTEL_EXPORTER_OTLP_PROTOCOL", builder.Configuration["Grafana:OTEL_EXPORTER_OTLP_PROTOCOL"]);
+using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+            .UseGrafana()
+            .Build();
+using var meterProvider = Sdk.CreateMeterProviderBuilder()
+    .UseGrafana()
+    .Build();
+
 //https://community.auth0.com/t/redirect-uri-is-always-http-but-only-in-production/83978/4
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
