@@ -16,34 +16,42 @@ namespace TropicalBudget.Controllers
         {
             if (budgetID == Guid.Empty)
                 return RedirectToAction("Index", "Home");
-            string userID = UserUtility.GetUserID(User);
-            DateTime currentDate = DateTime.Now;
-            string currentMonth = string.Empty;
-            DateTime startDate;
-            DateTime endDate;
-            if (year == null || month == null)
+            Tuple<Guid, List<Transaction>> budgetTransactions = new(new(), new());
+            try
             {
-                currentMonth = $"{currentDate.ToString("MMMM")}, {currentDate.ToString("yyyy")}";
-                //get start and end date of the month
-                startDate = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0);
-                endDate = startDate.AddMonths(1).AddSeconds(-1);
-            }
-            else
-            {
-                if (month.Value > 12 || month.Value < 1)
+                string userID = UserUtility.GetUserID(User);
+                DateTime currentDate = DateTime.Now;
+                string currentMonth = string.Empty;
+                DateTime startDate;
+                DateTime endDate;
+                if (year == null || month == null)
                 {
-                    return RedirectToAction("Index");
+                    currentMonth = $"{currentDate.ToString("MMMM")}, {currentDate.ToString("yyyy")}";
+                    //get start and end date of the month
+                    startDate = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0);
+                    endDate = startDate.AddMonths(1).AddSeconds(-1);
                 }
-                startDate = new DateTime(year.Value, month.Value, 1, 0, 0, 0);
-                endDate = startDate.AddMonths(1).AddSeconds(-1);
-                currentMonth = $"{startDate.ToString("MMMM")}, {startDate.ToString("yyyy")}";
+                else
+                {
+                    if (month.Value > 12 || month.Value < 1)
+                    {
+                        return RedirectToAction("Index");
+                    }
+                    startDate = new DateTime(year.Value, month.Value, 1, 0, 0, 0);
+                    endDate = startDate.AddMonths(1).AddSeconds(-1);
+                    currentMonth = $"{startDate.ToString("MMMM")}, {startDate.ToString("yyyy")}";
+                }
+                TempData["currentMonthString"] = currentMonth;
+                TempData["startDate"] = startDate;
+                Budget budget = await _db.GetBudget(userID, budgetID);
+                TempData["BudgetName"] = budget != null && !string.IsNullOrWhiteSpace(budget.Name) ? budget.Name : "Unknown";
+                List<Transaction> transactions = await _db.GetTransactions(budgetID, startDate, endDate);
+                budgetTransactions = new(budgetID, transactions);
             }
-            TempData["currentMonthString"] = currentMonth;
-            TempData["startDate"] = startDate;
-            Budget budget = await _db.GetBudget(userID, budgetID);
-            TempData["BudgetName"] = budget != null && !string.IsNullOrWhiteSpace(budget.Name) ? budget.Name : "Unknown";
-            List<Transaction> transactions = await _db.GetTransactions(budgetID, startDate, endDate);
-            Tuple<Guid, List<Transaction>> budgetTransactions = new(budgetID, transactions);
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return View("ViewInsights", budgetTransactions);
         }
     }

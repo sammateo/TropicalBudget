@@ -10,16 +10,30 @@ namespace TropicalBudget.Utilities
         public static decimal GetExpenses(List<Transaction> transactions)
         {
             decimal expenses = 0;
-            List<Transaction> expenseTransactions = transactions.Where(x => x.TransactionType == TRANSACTION_TYPE_EXPENSE).ToList();
-            expenses = expenseTransactions.Sum(x => x.Amount);
+            try
+            {
+                List<Transaction> expenseTransactions = transactions.Where(x => x.TransactionType == TRANSACTION_TYPE_EXPENSE).ToList();
+                expenses = expenseTransactions.Sum(x => x.Amount);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return expenses;
         }
         
         public static decimal GetIncome(List<Transaction> transactions)
         {
             decimal income = 0;
-            List<Transaction> incomeTransactions = transactions.Where(x => x.TransactionType == TRANSACTION_TYPE_INCOME).ToList();
-            income = incomeTransactions.Sum(x => x.Amount);
+            try
+            {
+                List<Transaction> incomeTransactions = transactions.Where(x => x.TransactionType == TRANSACTION_TYPE_INCOME).ToList();
+                income = incomeTransactions.Sum(x => x.Amount);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return income;
         }
     }

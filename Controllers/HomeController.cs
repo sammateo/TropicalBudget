@@ -42,9 +42,16 @@ namespace TropicalBudget.Controllers
 
         public async Task<IActionResult> AddNewBudget(Budget newBudget)
         {
-            string userID = UserUtility.GetUserID(User);
-            newBudget.UserID = userID;
-            await _db.InsertBudget(newBudget);
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                newBudget.UserID = userID;
+                await _db.InsertBudget(newBudget);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return RedirectToAction("Index");
         }
         [HttpPost]
@@ -63,10 +70,10 @@ namespace TropicalBudget.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                SentrySdk.CaptureException(ex);
                 return BadRequest($"An error occurred while processing your request");
             }
-                return Ok("success");
+            return Ok("success");
             
         }
 
@@ -86,17 +93,11 @@ namespace TropicalBudget.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                SentrySdk.CaptureException(ex);
                 return BadRequest($"An error occurred while processing your request");
             }
             return RedirectToAction("Index");
         }
-
-
-
-
-
-
 
         public IActionResult Privacy()
         {

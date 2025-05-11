@@ -17,8 +17,16 @@ namespace TropicalBudget.Controllers
     
         public async Task<IActionResult> Index()
         {
-            string userID = UserUtility.GetUserID(User);
-            List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
+            List<TransactionCategory> transactionCategories = new();
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                transactionCategories = await _db.GetTransactionCategories(userID);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return View("CategoryIndex", transactionCategories);
         }
         
@@ -28,30 +36,59 @@ namespace TropicalBudget.Controllers
         }
         public async Task<IActionResult> Edit(Guid categoryID)
         {
-            string userID = UserUtility.GetUserID(User);
-            TransactionCategory transactionCategory = await _db.GetTransactionCategory(categoryID, userID);
+            TransactionCategory transactionCategory = new();
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                transactionCategory = await _db.GetTransactionCategory(categoryID, userID);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return View("EditCategory", transactionCategory);
         }
 
         public async Task<IActionResult> AddNewCategory(TransactionCategory newCategory)
         {
-            string userID = UserUtility.GetUserID(User);
-            newCategory.UserID = userID;
-            await _db.InsertTransactionCategory(newCategory);
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                newCategory.UserID = userID;
+                await _db.InsertTransactionCategory(newCategory);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> EditExistingCategory(TransactionCategory newCategory)
         {
-            string userID = UserUtility.GetUserID(User);
-            newCategory.UserID = userID;
-            await _db.UpdateTransactionCategory(newCategory);
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                newCategory.UserID = userID;
+                await _db.UpdateTransactionCategory(newCategory);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> DeleteCategory(Guid categoryID)
         {
-            await _db.DeleteTransactionCategory(categoryID);
+            try
+            {
+                await _db.DeleteTransactionCategory(categoryID);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return RedirectToAction("Index");
         }
     }

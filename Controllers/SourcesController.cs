@@ -16,8 +16,16 @@ namespace TropicalBudget.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            string userID = UserUtility.GetUserID(User);
-            List<TransactionSource> transactionSources = await _db.GetTransactionSources(userID);
+            List<TransactionSource> transactionSources = new();
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                transactionSources = await _db.GetTransactionSources(userID);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return View("ViewTransactionSources", transactionSources);
         }
         public IActionResult Add()
@@ -26,31 +34,60 @@ namespace TropicalBudget.Controllers
         }
         public async Task<IActionResult> Edit(Guid sourceID)
         {
-            string userID = UserUtility.GetUserID(User);
-            TransactionSource transactionSource = await _db.GetTransactionSource(sourceID, userID);
+            TransactionSource transactionSource = new();
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                transactionSource = await _db.GetTransactionSource(sourceID, userID);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return View("EditSource", transactionSource);
         }
 
         public async Task<IActionResult> AddNewSource(TransactionSource newSource)
         {
-            string userID = UserUtility.GetUserID(User);
-            newSource.UserId = userID;
-            await _db.InsertTransactionSource(newSource);
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                newSource.UserId = userID;
+                await _db.InsertTransactionSource(newSource);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> EditExistingSource(TransactionSource newSource)
         {
-            string userID = UserUtility.GetUserID(User);
-            newSource.UserId = userID;
-            await _db.UpdateTransactionSource(newSource);
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                newSource.UserId = userID;
+                await _db.UpdateTransactionSource(newSource);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> DeleteSource(Guid sourceID)
         {
-            string userID = UserUtility.GetUserID(User);
-            await _db.DeleteTransactionSource(sourceID, userID);
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                await _db.DeleteTransactionSource(sourceID, userID);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return RedirectToAction("Index");
         }
     }
