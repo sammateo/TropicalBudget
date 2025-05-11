@@ -19,10 +19,18 @@ namespace TropicalBudget.Controllers
             _db = db;
         }
 
-        public async Task<IActionResult> Index(int? year, int? month)
+        public async Task<IActionResult> Index()
         {
-            string userID = UserUtility.GetUserID(User);
-            List<Budget> transactions = await _db.GetBudgets(userID);
+            List<Budget> transactions = new();
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                transactions = await _db.GetBudgets(userID);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
             return View(transactions);
         }
 

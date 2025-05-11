@@ -5,6 +5,23 @@ using TropicalBudget.Services;
 using TropicalBudget.Utilities;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseSentry(options =>
+{
+    options.Dsn = builder.Configuration["Sentry:Dsn"];
+    options.Debug = builder.Environment.IsDevelopment(); // Enable debug mode for development
+    options.SendDefaultPii = true; // Adds request URL and headers, IP and name for users, etc.
+    options.TracesSampleRate = 1.0; // Set this to configure automatic tracing
+    options.Environment = builder.Environment.IsDevelopment() ? "development" : "production";
+    options.AutoSessionTracking = true; // This option is recommended. It enables Sentry's "Release Health" feature.
+    options.IsGlobalModeEnabled = false; // Enabling this option is recommended for client applications only. It ensures all threads use the same global scope.
+    options.SetBeforeSend((@event, hint) =>
+    {
+        // Never report server names
+        @event.ServerName = null;
+        return @event;
+    });
+    //options.Release = builder.Configuration["Sentry:Release"];
+}); // Initialize Sentry
 //https://community.auth0.com/t/redirect-uri-is-always-http-but-only-in-production/83978/4
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
