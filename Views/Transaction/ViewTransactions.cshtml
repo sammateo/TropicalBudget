@@ -73,6 +73,10 @@
         <span>Today</span>
         <i class="bi bi-calendar-check"></i>
     </a>
+    <a id="exportTransactionsButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" asp-controller="Transaction" asp-action="Export" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
+        <span>Export</span>
+        <i class="bi bi-cloud-download"></i>
+    </a>
     <a id="spendingListButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success" asp-controller="Insights" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
         <span>Insights</span>
         <i class="bi bi-graph-up-arrow"></i>

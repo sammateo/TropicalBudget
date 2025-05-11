@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Globalization;
+using CsvHelper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TropicalBudget.Models;
 using TropicalBudget.Services;
@@ -99,6 +101,23 @@ namespace TropicalBudget.Controllers
         {
             await _db.DeleteTransaction(transactionID);
             return RedirectToAction("Index", new { budgetID });
+        }
+
+        public async Task<IActionResult> Export(Guid budgetID, int? year, int? month)
+        {
+            MemoryStream stream = new();
+
+            string filePath = $"Transactions.csv";
+            DateTime startDate = new DateTime(year.Value, month.Value, 1, 0, 0, 0);
+            DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
+            List<Transaction> transactions = await _db.GetTransactions(budgetID, startDate, endDate);
+            using (StreamWriter writer = new(stream, leaveOpen:true))
+            {
+                CsvWriter csv = new(writer, new CultureInfo("en-US"));
+                csv.WriteRecords(transactions);
+            }
+            stream.Position = 0;
+            return File(stream, "application/octet-stream", filePath);
         }
     }
 }
