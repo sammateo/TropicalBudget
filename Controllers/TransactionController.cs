@@ -157,10 +157,11 @@ namespace TropicalBudget.Controllers
                 DateTime startDate = new DateTime(year.Value, month.Value, 1, 0, 0, 0);
                 DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
                 List<Transaction> transactions = await _db.GetTransactions(budgetID, startDate, endDate);
+                List<TransactionExport> transactionExports = await TransactionUtility.ConvertTransactionsToExportTransactions(transactions);
                 using (StreamWriter writer = new(stream, leaveOpen:true))
                 {
                     CsvWriter csv = new(writer, new CultureInfo("en-US"));
-                    csv.WriteRecords(transactions);
+                    csv.WriteRecords(transactionExports);
                 }
                 stream.Position = 0;
             }

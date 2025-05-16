@@ -21,7 +21,7 @@ namespace TropicalBudget.Utilities
             }
             return expenses;
         }
-        
+
         public static decimal GetIncome(List<Transaction> transactions)
         {
             decimal income = 0;
@@ -35,6 +35,35 @@ namespace TropicalBudget.Utilities
                 SentrySdk.CaptureException(ex);
             }
             return income;
+        }
+
+        public static async Task<List<TransactionExport>> ConvertTransactionsToExportTransactions(List<Transaction> transactions)
+        {
+            List<TransactionExport> transactionExports = new();
+            if (transactions == null || transactions.Count == 0)
+            {
+                return transactionExports;
+            }
+            await Task.Run(() =>
+            {
+                foreach (Transaction transaction in transactions)
+                {
+                    transactionExports.Add(new TransactionExport
+                    {
+                        Amount = transaction.Amount,
+                        Note = transaction.Note,
+                        TransactionDate = DateOnly.FromDateTime(transaction.TransactionDate),
+                        Category = transaction.CategoryName,
+                        CategoryColor = transaction.CategoryColor,
+                        Source = transaction.SourceName,
+                        TransactionType = transaction.TransactionType,
+                        CreatedAt = transaction.CreatedAt
+                    });
+                }
+
+            });
+            
+            return transactionExports;
         }
     }
 }
