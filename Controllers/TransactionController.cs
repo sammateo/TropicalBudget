@@ -74,7 +74,7 @@ namespace TropicalBudget.Controllers
                 TempData["TransactionSources"] = transactionSources;
                 TempData["TransactionTypes"] = transactionTypes;
                 newTransaction.BudgetID = budgetID;
-                newTransaction.TransactionDate = DateTime.Now;
+                newTransaction.TransactionDate = DateTime.Now.ToLocalTime();
                 if (transactionTypes.Any(type => type.Name.Equals(TransactionUtility.TRANSACTION_TYPE_EXPENSE)))
                 {
                     newTransaction.TransactionTypeID = transactionTypes.FirstOrDefault(type => type.Name.Equals(TransactionUtility.TRANSACTION_TYPE_EXPENSE)).ID;

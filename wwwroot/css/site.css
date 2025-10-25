@@ -33,3 +33,7 @@ body {
 .budget-name:focus{
     border-bottom: 2px solid black;
 }
+
+.progress{
+    height: 0.2rem;
+}

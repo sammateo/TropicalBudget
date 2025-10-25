@@ -101,6 +101,10 @@
         <span>Budget</span>
         <i class="bi bi-card-list"></i>
     </a>
+    <a id="planBudgetButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success" asp-controller="Plan" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
+        <span>Plan</span>
+        <i class="bi bi-card-checklist"></i>
+    </a>
 </div>
 
 @if(transactions != null && transactions.Count > 0){

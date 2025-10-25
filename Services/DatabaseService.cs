@@ -344,6 +344,94 @@ namespace TropicalBudget.Services
 
         #endregion
 
+        #region Plan
+        public async Task<List<PlanItem>> GetPlanItems(Guid budgetID)
+        {
+            var users = new List<PlanItem>();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT p.id, p.budget_id AS budgetid, p.category_id AS categoryid, 
+                            p.amount, p.month, p.year, p.transaction_type_id AS transactiontypeid, tc.name AS categoryname, tc.color AS categorycolor, tt.name AS transactiontype
+                            FROM budget_plan p
+                            LEFT JOIN transaction_category tc ON p.category_id = tc.id
+                            LEFT JOIN transaction_type tt ON p.transaction_type_id = tt.id  
+                            WHERE p.budget_id = @budgetID";
+            users = (await conn.QueryAsync<PlanItem>(query, new { budgetID })).ToList();
+            return users;
+        }
+        public async Task<PlanItem> GetPlanItem(Guid planID, string userID)
+        {
+            var users = new PlanItem();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT p.id, p.budget_id AS budgetid, p.category_id AS categoryid, 
+                            p.amount, p.month, p.year, p.transaction_type_id AS transactiontypeid, tc.name AS categoryname, tc.color AS categorycolor, tt.name AS transactiontype
+                            FROM budget_plan p
+                            LEFT JOIN transaction_category tc ON p.category_id = tc.id
+                            LEFT JOIN transaction_type tt ON p.transaction_type_id = tt.id  
+                            LEFT JOIN budget b ON p.budget_id = b.id
+                            WHERE p.id = @planID AND b.user_id = @userID";
+            users = (await conn.QueryAsync<PlanItem>(query, new { planID, userID })).FirstOrDefault();
+            return users;
+        }
+
+        public async Task InsertPlanItem(PlanItem planItem)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"INSERT INTO budget_plan 
+                (amount, month, year, category_id, transaction_type_id, budget_id)
+                VALUES 
+                (@amount, @month, @year, @category_id, @transaction_type_id, @budget_id)";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                budget_id = planItem.BudgetID,
+                category_id = planItem.CategoryID,
+                amount = planItem.Amount,
+                month = planItem.Month,
+                year = planItem.Year,
+                transaction_type_id = planItem.TransactionTypeID,
+            }
+                ));
+        }
+        public async Task UpdatePlanItem(PlanItem planItem)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"UPDATE budget_plan 
+                SET amount = @amount,
+                    month = @month,
+                    year = @year,
+                    category_id = @category_id,
+                    transaction_type_id = @transaction_type_id,
+                    budget_id = @budget_id
+                    WHERE ID = @ID";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                amount = planItem.Amount,
+                month = planItem.Month,
+                year = planItem.Year,
+                category_id = planItem.CategoryID,
+                transaction_type_id = planItem.TransactionTypeID,
+                budget_id = planItem.BudgetID,
+                ID = planItem.ID
+            }
+                ));
+        }
+
+        public async Task DeletePlanItem(Guid planID)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"DELETE FROM budget_plan 
+                WHERE ID = @planID";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                planID
+            }));
+        }
+        #endregion
+
         #region Types
         public async Task<List<TransactionType>> GetTransactionTypes()
         {
