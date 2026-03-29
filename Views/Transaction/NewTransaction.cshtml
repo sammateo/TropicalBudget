@@ -29,7 +29,12 @@
                     </div>
 				}
                 @Html.LabelFor(x =>x.CategoryID, "Category")
-                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID", "Name"), new { @class = "form-select", @required = true })
+                <div class="d-flex align-items-center gap-2">
+                    @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID", "Name"), new { @class = "form-select", @required = true })
+                    <a asp-controller="Category" asp-action="Index">
+                        <i style="cursor:pointer" class="bi bi-pencil-fill text-white px-3 py-2 fs-6 bg-primary rounded"></i>
+                    </a>
+                </div>
                 @if (transactionSources == null || transactionSources.Count <= 0)
                 {
                     <div class="alert alert-danger" role="alert">
@@ -37,7 +42,12 @@
                     </div>
                 }
                 @Html.LabelFor(x =>x.SourceID, "From", new{ @id ="source-label"})
-                @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"), new { @class = "form-select", @required = true })
+                <div class="d-flex align-items-center gap-2">
+                    @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"), new { @class = "form-select", @required = true })
+                    <a asp-controller="Sources" asp-action="Index">
+                        <i style="cursor:pointer" class="bi bi-pencil-fill text-white px-3 py-2 fs-6 bg-primary rounded"></i>
+                    </a>
+                </div>
                 @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
                 @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select", @onchange = "onTransactionTypeChanged(this.options[this.selectedIndex].text)", @required = true })
                 @Html.LabelFor(x => x.TransactionDate, "Date")

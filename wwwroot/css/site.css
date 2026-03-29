@@ -8,8 +8,14 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+  box-shadow:
+    0 0 0 0.1rem white,
+    0 0 0 0.25rem #258cfb;
 }
 
 html {
@@ -21,19 +27,25 @@ body {
   margin-bottom: 60px;
 }
 
-.budget-name{
-    outline:none;
-    border:none;
-    border-bottom:2px solid transparent;
-    text-align:center;
-    padding:10px 0px;
-    transition: border ease-in-out 500ms;
+.budget-name {
+  outline: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  text-align: center;
+  padding: 10px 0px;
+  transition: border ease-in-out 500ms;
 }
 
-.budget-name:focus{
-    border-bottom: 2px solid black;
+.budget-name:focus {
+  border-bottom: 2px solid black;
 }
 
-.progress{
-    height: 0.2rem;
+.progress {
+  height: 0.2rem;
+}
+
+.subtext {
+  color: grey;
+  max-width: 50rem;
+  margin: 0 auto;
 }
