@@ -9,6 +9,7 @@
     string currentMonthString = TempData.ContainsKey("currentMonthString") ? (string)TempData["currentMonthString"] : string.Empty;
     DateTime startDate = (DateTime)TempData["startDate"];
     string budgetName = TempData["BudgetName"].ToString();
+    @* string AIInsights = TempData["AIInsights"].ToString(); *@
     int nextMonth = startDate.AddMonths(1).Month;
     int nextYear = startDate.AddMonths(1).Year;
     int previousMonth = startDate.AddMonths(-1).Month;
@@ -97,6 +98,10 @@
         <span>Today</span>
         <i class="bi bi-calendar-check"></i>
     </a>
+    <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-success border border-success" asp-controller="Insights" asp-action="AI" asp-all-route-data="fullTransactionRouteData">
+        <span>AI Insights</span>
+        <i class="bi bi-stars"></i>
+    </a>
     <a id="spendingListButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" asp-controller="Transaction" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
         <span>Budget</span>
         <i class="bi bi-card-list"></i>
@@ -151,6 +156,20 @@
             <canvas class="" id="transactionsByDateLineChart"></canvas>
         </div>
     </div>
+        @* <div>
+        <div class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+            <h3 class="text-center">AI Insights</h3>
+            <div onclick="downloadspentThisMonthChart()" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" style="cursor:pointer">
+                <span>Export</span>
+                <i class="bi bi-box-arrow-down"></i>
+            </div>
+        </div>
+        <div style="max-width:90vw;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+            <pre>
+                @AIInsights
+            </pre>
+        </div>
+    </div> *@
 }else{
         <div class="d-flex flex-column align-items-center justify-content-center my-5">
             <h2 class="text-center">No Transactions</h2>
