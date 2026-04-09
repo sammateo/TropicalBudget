@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Google.GenAI;
+using Google.GenAI.Types;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using TropicalBudget.Models;
@@ -152,8 +153,6 @@ namespace TropicalBudget.Controllers
                 {
                     //generate ai insights
                     insights = await generateAIInsightsWithGemini(transactions, planItems);
-                    insights = insights.Replace("```html", "");
-                    insights = insights.Replace("```", "");
                     AIInsight newInsights = new();
                     newInsights.BudgetID = budgetID;
                     newInsights.Month = startDate.Month;
@@ -180,35 +179,82 @@ namespace TropicalBudget.Controllers
         {
             var client = new Client(apiKey: _geminiSettings.API_KEY);
 
+            //response schema
+            Schema aiInsightsInfo = new()
+            {
+                Type = Google.GenAI.Types.Type.Array,
+                Items = new Schema
+                {
+                    Properties = new Dictionary<string, Schema>
+                {
+                    {
+                        "title", new Schema {Type = Google.GenAI.Types.Type.String, Title = "Name" }
+                    },
+                    {
+                        "details", new Schema {Type = Google.GenAI.Types.Type.String, Title = "Details" }
+                    },
+                    {
+                        "type", new Schema {Type = Google.GenAI.Types.Type.String, Title = "Type" }
+                    },
+                },
+                    PropertyOrdering = ["title", "details", "type"],
+                    Required = ["title", "details", "type"],
+                    Title = "AIInsight",
+                    Type = Google.GenAI.Types.Type.Object
+                }
+            };
+
+
+            //generation config
+            GenerateContentConfig generateContentConfig = new()
+            {
+                ResponseJsonSchema = aiInsightsInfo,
+                ResponseMimeType = "application/json",
+                SystemInstruction = new Content
+                {
+                    Parts = [
+                        new Part {
+                            Text = "You are a budgeting app, evaluate the following transactions and provide insights into the spending of the user and recommendations.",
+                        },
+                        new Part{
+                            Text = "The budgeting app allows users to budget monthly, the transactions you are given are for a given month."
+                        },
+                        new Part{
+                            Text = "Do not give me detailed transactions or any breakdowns."
+                        },
+                        new Part{
+                            Text = "When giving the recommendations and insights, you can use the transaction data to provide numbers for the various categories."
+                        },
+                        new Part{
+                            Text = "The user may also have set target amounts for specific categories for the month which will be outlined in their plan."
+                        },
+                        new Part{
+                            Text = "You can use their plan to determine if the user is hitting their goals, overspending, etc."
+                        },
+                        new Part{
+                            Text = "You can also provide recommendations and insights using both the transaction and plan data."
+                        },
+                        new Part{
+                            Text = "The response type should be a string that is either 'insight' or 'recommendation'."
+                        },
+                        new Part{
+                            Text = "The details field can be returned as html."
+                        },
+                    ]
+                }
+
+            };
+
             var response = await client.Models.GenerateContentAsync(
-                model: "gemini-2.5-flash-lite",
+                model: "gemini-2.5-flash",
+                config: generateContentConfig,
                 contents:
-
-
                 $"""
-                You are a budgeting app, evaluate the following transactions and provide insights into the spending of the user and recommendations. 
-                The budgeting app allows users to budget monthly, the transactions you are given are for a given month.
-                Do not give me detailed transactions or any breakdowns. 
-                Do not include a title or subtitle, only include the insight and recommendation details.
-                Format the recommendations and insights as a list of easily digestible html cards. 
-                When giving the recommendations and insights, you can use the transaction data to provide numbers for the various categories.
-                The response should be in html and able to be placed directly into the existing html code and also be responsive. 
-                The existing codebase uses bootstrap, so those styles can be used.
-
                 Transactions:
                 {JsonSerializer.Serialize(transactions)}
-                
-                The user may also have set target amounts for specific categories for the month which will be outlined in their plan.
-                You can use their plan to determine if the user is hitting their goals, overspending, etc.
-                You can also provide recommendations and insights using both the transaction and plan data.
-
+ 
                 Plan:
-                {JsonSerializer.Serialize(planItems)}
-
-
-                Ensure each recommendation and insight is in a separate card. It can be two columns on desktop and one on mobile for responsiveness.
-                Use colors in the cards to add a pop of color and you can round the cards as well.
-                
+                {JsonSerializer.Serialize(planItems.Select(x => new { x.Amount, x.CategoryName, x.CategoryID, x.CategoryColor, x.BudgetID }))}
                 """
             );
             return response.Candidates[0].Content.Parts[0].Text;

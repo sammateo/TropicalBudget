@@ -80,6 +80,9 @@ string.Empty;
     </a>
 </div>
 
+<div>
+    <p class="text-secondary"><span>*</span>The accuracy of the information returned cannot be guaranteed.</p>
+</div>
 <div id="ai-insights-container">
     <div class="w-100 d-flex flex-column justify-content-center align-items-center gap-4 text-center">
         <span>Generating Insights</span>
@@ -102,8 +105,28 @@ string.Empty;
                 month: "@currentMonth"
             }),
             success: (response) => {
-                console.log("response: ", response)
-                $("#ai-insights-container").html(response.message);
+                const insights = JSON.parse(response.message);
+                console.log(insights)
+                let insightsHtml = `
+                <div class="row gx-4 gy-4">`
+                
+                insights.forEach((insight) => {
+                    insightsHtml += `
+                    <div class="col-12 col-md-6">
+                        <div class="card h-100 rounded shadow-sm">
+                            <div class="card-body">
+                                <h5 class="${insight.type == 'recommendation' ? 'text-success' : 'text-primary'}">${insight.title}</h5>
+                                <p>${insight.details}</p>
+                            </div>
+                        </div>
+                    </div>
+                    `})
+                
+                insightsHtml += `
+                </div>
+                `
+                $("#ai-insights-container").html(insightsHtml);
+                
             },
             error: (xhr, status, error) => {
                 console.log("Error: ", error)
