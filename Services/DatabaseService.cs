@@ -27,7 +27,7 @@ namespace TropicalBudget.Services
             users = (await conn.QueryAsync<Budget>(query, new { userID })).ToList();
             return users;
         }
-        
+
         public async Task<Budget> GetBudget(string userID, Guid budgetID)
         {
             var users = new Budget();
@@ -53,7 +53,7 @@ namespace TropicalBudget.Services
                 user_id = budget.UserID
             }));
         }
-        
+
         public async Task UpdateBudget(Budget budget)
         {
             using var conn = new NpgsqlConnection(_connectionString);
@@ -225,7 +225,7 @@ namespace TropicalBudget.Services
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT id, name, user_id AS userid, color
                     FROM transaction_category WHERE user_id = @userID";
-            users = (await conn.QueryAsync<TransactionCategory>(query, new {userID})).ToList();
+            users = (await conn.QueryAsync<TransactionCategory>(query, new { userID })).ToList();
             return users;
         }
 
@@ -247,7 +247,7 @@ namespace TropicalBudget.Services
                 (name, user_id, color)
                 VALUES 
                 (@name, @user_id, @color)";
-            int result = (await conn.ExecuteAsync(query, new { name = transactionCategory.Name, user_id = transactionCategory.UserID, color=transactionCategory.Color }));
+            int result = (await conn.ExecuteAsync(query, new { name = transactionCategory.Name, user_id = transactionCategory.UserID, color = transactionCategory.Color }));
         }
 
         public async Task UpdateTransactionCategory(TransactionCategory transactionCategory)
@@ -287,7 +287,7 @@ namespace TropicalBudget.Services
             users = (await conn.QueryAsync<TransactionSource>(query)).ToList();
             return users;
         }
-        
+
         public async Task<List<TransactionSource>> GetTransactionSources(string userID)
         {
             var users = new List<TransactionSource>();
@@ -330,7 +330,7 @@ namespace TropicalBudget.Services
             {
                 name = transactionsource.Name,
                 user_id = transactionsource.UserId,
-                ID = transactionsource.ID            
+                ID = transactionsource.ID
             }
             ));
         }
@@ -441,6 +441,39 @@ namespace TropicalBudget.Services
                     FROM transaction_type";
             users = (await conn.QueryAsync<TransactionType>(query)).ToList();
             return users;
+        }
+        #endregion
+
+        #region AI Insights
+        public async Task<AIInsight> GetAIInsight(Guid budgetID, int month, int year)
+        {
+            var aiinsight = new AIInsight();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT id, budget_id AS budgetid, month, year, content, created_at AS CreatedAt
+                    FROM ai_insights
+                    WHERE budget_id = @budgetID AND month = @month AND year = @year
+                    ORDER BY created_at DESC";
+            aiinsight = (await conn.QueryAsync<AIInsight>(query, new { budgetID, month, year })).FirstOrDefault();
+            return aiinsight;
+        }
+
+        public async Task InsertAIInsight(AIInsight aIInsight)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"INSERT INTO ai_insights 
+                (budget_id, month, year, content)
+                VALUES 
+                (@budget_id, @month, @year, @content)";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                budget_id = aIInsight.BudgetID,
+                month = aIInsight.Month,
+                year = aIInsight.Year,
+                content = aIInsight.Content,
+            }
+                ));
         }
         #endregion
     }

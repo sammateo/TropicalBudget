@@ -36,6 +36,16 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
     options.Scope = "openid profile email";
 });
 
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+
+var config = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile($"appsettings.{environment}.json", optional: true)
+    .Build();
+
+builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("Gemini"));
+
+
 CultureInfo culture = new CultureInfo("en-US");
 culture.NumberFormat.CurrencySymbol = "$";
 CultureInfo.DefaultThreadCurrentCulture = culture;
