@@ -278,7 +278,7 @@ namespace TropicalBudget.Controllers
                 {JsonSerializer.Serialize(planItems.Select(x => new { x.Amount, x.CategoryName, x.CategoryID, x.CategoryColor, x.BudgetID }))}
                 """
             );
-            return response.Candidates[0].Content.Parts[0].Text;
+            return response.Candidates?[0].Content?.Parts?[0].Text ?? "";
         }
     }
 }
