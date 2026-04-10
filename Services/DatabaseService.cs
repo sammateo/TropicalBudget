@@ -450,9 +450,10 @@ namespace TropicalBudget.Services
             var aiinsight = new AIInsight();
 
             using var conn = new NpgsqlConnection(_connectionString);
-            string query = @"SELECT id, budget_id AS budgetid, month, year, content
+            string query = @"SELECT id, budget_id AS budgetid, month, year, content, created_at AS CreatedAt
                     FROM ai_insights
-                    WHERE budget_id = @budgetID AND month = @month AND year = @year";
+                    WHERE budget_id = @budgetID AND month = @month AND year = @year
+                    ORDER BY created_at DESC";
             aiinsight = (await conn.QueryAsync<AIInsight>(query, new { budgetID, month, year })).FirstOrDefault();
             return aiinsight;
         }

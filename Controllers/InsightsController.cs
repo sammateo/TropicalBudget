@@ -147,22 +147,28 @@ namespace TropicalBudget.Controllers
                 List<PlanItem> planItems = await _db.GetPlanItems(budgetID);
 
                 AIInsight aIInsight = await _db.GetAIInsight(budgetID, startDate.Month, startDate.Year);
-                Console.WriteLine("insights:");
-                // Console.WriteLine(aIInsight.Content);
+
                 if (transactions.Count > 0 && (aIInsight == null || aIInsight.Content == null || aIInsight.Content.Trim() == ""))
                 {
                     //generate ai insights
-                    insights = await generateAIInsightsWithGemini(transactions, planItems);
-                    AIInsight newInsights = new();
-                    newInsights.BudgetID = budgetID;
-                    newInsights.Month = startDate.Month;
-                    newInsights.Year = startDate.Year;
-                    newInsights.Content = insights;
-                    await _db.InsertAIInsight(newInsights);
+                    insights = await generateAndSaveAIInsights(transactions, planItems, budgetID, startDate);
                 }
                 else if (aIInsight != null && aIInsight.Content != null && aIInsight.Content.Trim() != "")
                 {
-                    insights = aIInsight.Content;
+                    //if insights exist but for a previous date - rerun
+                    DateOnly today = DateOnly.FromDateTime(currentDate);
+                    DateOnly insightsCreated = DateOnly.FromDateTime(aIInsight.CreatedAt);
+
+                    if (insightsCreated < today)
+                    {
+
+                        insights = await generateAndSaveAIInsights(transactions, planItems, budgetID, startDate);
+                    }
+                    else
+                    {
+                        // do not regenerate if alreadt run for the day
+                        insights = aIInsight.Content;
+                    }
                 }
 
             }
@@ -173,6 +179,18 @@ namespace TropicalBudget.Controllers
                 return Problem();
             }
             return Ok(new { message = insights });
+        }
+
+        private async Task<string> generateAndSaveAIInsights(List<Transaction> transactions, List<PlanItem> planItems, Guid budgetID, DateTime startDate)
+        {
+            string insights = await generateAIInsightsWithGemini(transactions, planItems);
+            AIInsight newInsights = new();
+            newInsights.BudgetID = budgetID;
+            newInsights.Month = startDate.Month;
+            newInsights.Year = startDate.Year;
+            newInsights.Content = insights;
+            await _db.InsertAIInsight(newInsights);
+            return insights;
         }
 
         private async Task<string> generateAIInsightsWithGemini(List<Transaction> transactions, List<PlanItem> planItems)
@@ -236,6 +254,9 @@ namespace TropicalBudget.Controllers
                         },
                         new Part{
                             Text = "The response type should be a string that is either 'insight' or 'recommendation'."
+                        },
+                        new Part{
+                            Text = "Ensure that generated recommendations and insights details that are returned are no more than 2/3 sentences."
                         },
                         new Part{
                             Text = "The details field can be returned as html."
