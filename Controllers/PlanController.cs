@@ -95,6 +95,28 @@ namespace TropicalBudget.Controllers
         {
             if (budgetID == Guid.Empty || planID == Guid.Empty || year == null || month == null)
                 return RedirectToAction("Index", "Home");
+
+            DateTime currentDate = DateTime.Now;
+            string currentMonth = string.Empty;
+            DateTime startDate;
+            DateTime endDate;
+            if (year == null || month == null)
+            {
+                currentMonth = $"{currentDate.ToString("MMMM")}, {currentDate.ToString("yyyy")}";
+                //get start and end date of the month
+                startDate = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0);
+                endDate = startDate.AddMonths(1).AddSeconds(-1);
+            }
+            else
+            {
+                if (month.Value > 12 || month.Value < 1)
+                {
+                    return RedirectToAction("Index");
+                }
+                startDate = new DateTime(year.Value, month.Value, 1, 0, 0, 0);
+                endDate = startDate.AddMonths(1).AddSeconds(-1);
+                currentMonth = $"{startDate.ToString("MMMM")}, {startDate.ToString("yyyy")}";
+            }
             PlanItem editPlanItem = new();
             try
             {
@@ -105,12 +127,14 @@ namespace TropicalBudget.Controllers
                 editPlanItem.Month = month.Value;
                 List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
                 List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
+                List<Transaction> transactions = await _db.GetTransactions(budgetID, startDate, endDate);
 
                 //get categories not already in the plan
                 transactionCategories = transactionCategories.Where(cat => !planItems.Any(item => item.CategoryID == cat.ID) || cat.ID == editPlanItem.CategoryID).ToList();
                 transactionCategories = transactionCategories.OrderBy(cat => cat.Name).ToList();
                 TempData["TransactionCategories"] = transactionCategories;
                 TempData["TransactionTypes"] = transactionTypes;
+                TempData["Transactions"] = transactions;
             }
             catch (Exception ex)
             {

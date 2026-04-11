@@ -4,10 +4,11 @@
     ViewData["Title"] = "Edit Plan Item";
     List<TransactionCategory> transactionCategories = (List<TransactionCategory>)TempData["TransactionCategories"];
     List<TransactionType> transactionTypes = (List<TransactionType>)TempData["TransactionTypes"];
+        List<Transaction> transactions = (List<Transaction>)TempData["Transactions"];
 }
 
 <div class="text-center">
-    <h1 class="display-4">Edit Category</h1>
+    <h1 class="display-4">Edit Plan Category</h1>
     <div>
         @using (Html.BeginForm("EditExistingPlanItem", "Plan"))
         {
@@ -32,7 +33,7 @@
                     </div>
                 }
                 @Html.LabelFor(x => x.CategoryID, "Category")
-                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID", "Name"), new { @class = "form-select", @required = true })
+                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID", "Name"), new { @class = "form-select", @required = true, @onchange = "onCategoryChanged(this.options[this.selectedIndex].value)" })
                 @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
                 @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select", @onchange = "onTransactionTypeChanged(this.options[this.selectedIndex].text)", @required = true })
                 <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
@@ -44,9 +45,73 @@
     </div>
 </div>
 
+<div id="transactions">
+
+</div>
+
 <script>
     const navigateToHome = () =>{
         location.href = "@Url.Action("Index", "Plan")" +"?budgetID=@(Model.BudgetID.ToString())&year=@(Model.Year)&month=@(Model.Month)";
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        onCategoryChanged('@Model.CategoryID')
+})
+
+    const onCategoryChanged = (category) => {
+        var transactionList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(transactions));
+        
+        transactionList = transactionList.filter(list => list.CategoryID == category)
+
+        transactionList.sort((a,b) => new Date(a.TransactionDate)-new Date(b.TransactionDate));
+
+        const transactionsGroupedByDate = Object.groupBy(transactionList, (item) => {
+            const d = new Date(item.TransactionDate)
+            return d
+        })
+
+        //order transactions in descending order
+        const orderedGrouping = Object.entries(transactionsGroupedByDate)
+        .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+        .map(([key, items]) => ({ key, items }));
+
+        let transactionsHtml = `<div>`
+
+        orderedGrouping.forEach(group => {
+             const formattedDate = new Intl.DateTimeFormat('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: '2-digit'
+                }).format(new Date(group.key));
+
+            transactionsHtml += `
+            <div class="d-flex justify-content-between align-items-center my-2">
+                <h2>${formattedDate}</h2>
+            </div>
+            `
+            group.items.forEach(item => {
+                const formatter = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                });
+
+                transactionsHtml+=`
+                <div class="d-flex flex-column gap-2 mb-2" style="border-left: 2px solid ${item.CategoryColor}">
+                    <div class="d-flex align-items-center justify-content-between bg-light py-2 px-2 rounded">
+                        <div class="d-flex flex-column">
+                            <span class="fs-4 fw-normal">${item.Note ?? ""}</span>
+                            <span class="${item.Note? "fs-6 fw-light":"fs-4 fw-normal"}">${item.CategoryName}</span>
+                        </div>
+                        <span class="fw-bold fs-5">${formatter.format(item.Amount)}</span>
+                    </div>
+                </div>`
+            })
+        })
+
+        transactionsHtml+=`</div>`
+
+        $("#transactions").html(transactionsHtml)
+
     }
     const onTransactionTypeChanged = (transactionType) =>  {
         const source_label = document.getElementById('source-label');

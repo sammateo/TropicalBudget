@@ -52,13 +52,7 @@ namespace TropicalBudget.Controllers
                 Budget budget = await _db.GetBudget(userID, budgetID);
                 TempData["BudgetName"] = budget != null && !string.IsNullOrWhiteSpace(budget.Name) ? budget.Name : "Unknown";
                 List<Transaction> transactions = await _db.GetTransactions(budgetID, startDate, endDate);
-                // if(transactions.Count > 0)
-                // {
-                //     //generate ai insights
-                //     Console.WriteLine("Generating insights");
-                //     string insights = await generateAIInsightsWithGemini(transactions);
-                //     TempData["AIInsights"] = insights;
-                // }
+
                 budgetTransactions = new(budgetID, transactions);
             }
             catch (Exception ex)
