@@ -8,7 +8,7 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Edit Plan Category</h1>
+    <h1 class="display-4">Edit Plan Item</h1>
     <div>
         @using (Html.BeginForm("EditExistingPlanItem", "Plan"))
         {
@@ -33,6 +33,7 @@
                     </div>
                 }
                 @Html.LabelFor(x => x.CategoryID, "Category")
+                <p class="subtext small">*Categories already assigned a plan will not show in this list</p>
                 @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID", "Name"), new { @class = "form-select", @required = true, @onchange = "onCategoryChanged(this.options[this.selectedIndex].value)" })
                 @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
                 @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select", @onchange = "onTransactionTypeChanged(this.options[this.selectedIndex].text)", @required = true })
