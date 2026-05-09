@@ -4,6 +4,12 @@
     ViewData["Title"] = "New Item";
     List<SavingsGoal> savingsGoals = (List<SavingsGoal>)TempData["SavingsGoals"];
     List<TransactionType> transactionTypes = (List<TransactionType>)TempData["TransactionTypes"];
+    Dictionary<string, string> fullRouteData = new()
+    {
+        {"budgetID", Model.BudgetID.ToString()},
+        {"year", Model.Year.ToString()},
+        {"month", Model.Month.ToString()},
+    };
 }
 
 <div class="text-center">
@@ -27,7 +33,7 @@
                 @if (savingsGoals == null || savingsGoals.Count <= 0)
                 {
                     <div class="alert alert-danger" role="alert">
-                        No Savings Goals available. Please <a asp-controller="SavingsGoals" asp-action="Index">set a goal</a> first.
+                        No Savings Goals available. Please <a asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="fullRouteData">set a goal</a> first.
                     </div>
                 }
                 @Html.LabelFor(x => x.SavingsGoalID, "Savings Goal")
