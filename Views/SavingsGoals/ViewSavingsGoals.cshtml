@@ -1,0 +1,110 @@
+﻿@using TropicalBudget.Models.ViewModels
+@using TropicalBudget.Utilities
+@model ViewSavingsGoalsViewModel
+
+@{
+    ViewData["Title"] = "Savings Goals";
+    Dictionary<string, string> fullTransactionRouteData = new()
+    {
+        {"budgetID", Model.Budget.ID.ToString()},
+        {"year", Model.StartDate.Year.ToString()},
+        {"month", Model.StartDate.Month.ToString()},
+    };
+}
+
+<div class="text-center">
+    <h2 class="fs-1">Savings Goals: @Model.Budget.Name</h2>
+    <p class="subtext">Savings goals help you set targets for things you want to save toward and track your progress
+        over time. You can add or withdraw funds during transactions and create monthly plans to stay on track with your
+        savings targets.</p>
+
+        @* Button row *@
+        <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 my-3">
+            <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-primary border"
+                   asp-controller="SavingsGoals" asp-action="New" asp-all-route-data="fullTransactionRouteData">
+                <span>Set New Goal</span>
+                <i class="bi bi-plus-circle"></i>
+            </a>
+            <a id="spendingListButton"
+                   class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+                   asp-controller="Transaction" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+                   style="cursor:pointer">
+                <span>Transactions</span>
+                <i class="bi bi-card-list"></i>
+            </a>
+            <a id="planBudgetButton"
+                   class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+                   asp-controller="Plan" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+                   style="cursor:pointer">
+                <span>Plan</span>
+                <i class="bi bi-card-checklist"></i>
+            </a>
+            <a id="spendingListButton"
+                   class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+                   asp-controller="Insights" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+                   style="cursor:pointer">
+                <span>Insights</span>
+                <i class="bi bi-graph-up-arrow"></i>
+            </a>
+        </div>
+
+        <div class="d-flex flex-column gap-4">
+            @if (Model.SavingsGoals != null && Model.SavingsGoals.Count > 0)
+            {
+                foreach (SavingsGoal savingsGoal in Model.SavingsGoals)
+                {
+                    List<Transaction> savingsTransactions = new();
+                    decimal transactionSum = 0;
+                    if (Model.Transactions != null && Model.Transactions.Count > 0)
+                    {
+                        savingsTransactions = Model.Transactions.Where(t => t.SavingsGoalID == savingsGoal.ID).ToList();
+                        transactionSum = savingsTransactions.Sum(x => x.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE ?
+            x.Amount : x.Amount * -1);
+                    }
+
+                    decimal transactionPercentage = 0;
+                    if (savingsGoal.GoalAmount > 0)
+                    {
+                        transactionPercentage = (transactionSum / savingsGoal.GoalAmount) * 100;
+                    }
+
+                 
+                    Dictionary<string, string> editSavingsGoalsRouteData = new()
+                {
+                    {"budgetID", Model.Budget.ID.ToString()},
+                    {"year", Model.StartDate.Year.ToString()},
+                    {"month", Model.StartDate.Month.ToString()},
+                    {"savingsGoalID", savingsGoal.ID.ToString()}
+                };
+
+                    <a class="d-flex w-full shadow-sm rounded-3 px-4 py-3 text-decoration-none text-body"
+                           asp-controller="SavingsGoals" asp-action="Edit" asp-all-route-data="editSavingsGoalsRouteData">
+                        <div class="w-100">
+                            <div class="d-flex align-items-center gap-3 mb-4">
+                                <span class="rounded-circle"
+                                      style="width:20px; height:20px; background-color: @savingsGoal.Color; display:block"></span>
+                                <span class="fs-4 fw-bold text-start">@(savingsGoal.Title)</span>
+
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar"
+                                     style="width: @(transactionPercentage)%; background-color: @(savingsGoal.Color);"
+                                     aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <span>@($"{transactionSum:c}")</span>
+                                <span>@($"{savingsGoal.GoalAmount:c}")</span>
+                            </div>
+                        </div>
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="d-flex flex-column align-items-center justify-content-center my-5">
+                    <h2 class="text-center">No Savings Goals</h2>
+                    <i class="bi bi-file-earmark-excel" style="font-size:4rem;"></i>
+                </div>
+            }
+        </div>
+    </div>

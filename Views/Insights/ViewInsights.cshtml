@@ -26,8 +26,8 @@
         {"month", startDate.Month.ToString()},
     };
 
-    List<IGrouping<Guid, Transaction>> categoryGroupedExpenses = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).GroupBy(transaction => transaction.CategoryID).ToList();
-    List<IGrouping<Guid, Transaction>> categoryGroupedIncome = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_INCOME).GroupBy(transaction => transaction.CategoryID).ToList();
+    List<IGrouping<Guid, Transaction>> categoryGroupedExpenses = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE && transaction.CategoryID != Guid.Empty).GroupBy(transaction => transaction.CategoryID).ToList();
+    List<IGrouping<Guid, Transaction>> categoryGroupedIncome = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_INCOME && transaction.CategoryID != Guid.Empty).GroupBy(transaction => transaction.CategoryID).ToList();
 
     List<Transaction> incomeTransactions = transactions.Where(x => x.TransactionType == TransactionUtility.TRANSACTION_TYPE_INCOME).ToList();
     List<Transaction> expenseTransactions = transactions.Where(x => x.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).ToList();
@@ -103,11 +103,18 @@
         <i class="bi bi-stars"></i>
     </a>
     <a id="spendingListButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" asp-controller="Transaction" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
-        <span>Budget</span>
+        <span>Transactions</span>
         <i class="bi bi-card-list"></i>
     </a>
     <a id="planBudgetButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success" asp-controller="Plan" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
         <span>Plan</span>
+        <i class="bi bi-card-checklist"></i>
+    </a>
+    <a id="savingsGoalsButton"
+           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+           asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+           style="cursor:pointer">
+        <span>Savings Goals</span>
         <i class="bi bi-card-checklist"></i>
     </a>
 </div>
@@ -231,9 +238,12 @@
         },
         options: {
             legend: {
-                display:true,
+                display: expensesCategories?.length <= 10,
                 responsive:true,
-                position:'bottom'
+                position:'bottom',
+                labels:{
+                    usePointStyle: true,
+                }
             },
             tooltips:{
                 callbacks: {
@@ -263,9 +273,12 @@
         },
         options: {
             legend: {
-                display:true,
+                display: incomeCategories?.length <= 10,
                 responsive:true,
-                position:'bottom'
+                position:'bottom',
+                labels:{
+                    usePointStyle: true,
+                }
             },
             tooltips:{
                 callbacks: {

@@ -14,7 +14,7 @@ namespace TropicalBudget.Models
         public string Note { get; set; }
 
         [Column("category_id")]
-        public Guid CategoryID  { get; set; }
+        public Guid CategoryID { get; set; }
 
         [Column("source_id")]
         public Guid SourceID { get; set; }
@@ -33,6 +33,15 @@ namespace TropicalBudget.Models
         public Guid BudgetID { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
+        public Guid SavingsGoalID { get; set; }
+        public string SavingsGoalTitle { get; set; }
+
+        public bool IsSavings { get; set; }
+
+        public string UiTransactionType { get; set; }
+
+        public string SavingsGoalColor { get; set; }
 
     }
 }

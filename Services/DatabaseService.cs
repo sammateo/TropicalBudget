@@ -91,7 +91,8 @@ namespace TropicalBudget.Services
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype,
                     transaction_date::timestamp as transactiondate, category_id AS categoryid, 
-                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
+                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp,
+                    t.savings_goal_id as SavingsGoalID, t.is_savings as IsSavings
                     FROM transactions t
                     LEFT JOIN transaction_category tc ON t.category_id = tc.id
                     LEFT JOIN transaction_source ts ON t.source_id = ts.id
@@ -113,7 +114,8 @@ namespace TropicalBudget.Services
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype,
                     transaction_date::timestamp as transactiondate, category_id AS categoryid, 
-                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
+                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp,  
+                    t.savings_goal_id as SavingsGoalID, t.is_savings as IsSavings
                     FROM transactions t
                     LEFT JOIN transaction_category tc ON t.category_id = tc.id
                     LEFT JOIN transaction_source ts ON t.source_id = ts.id
@@ -130,13 +132,32 @@ namespace TropicalBudget.Services
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT t.id,amount, note, tc.name AS categoryname, tc.color AS categorycolor, ts.name AS sourcename, tt.name AS transactiontype,
                     transaction_date::timestamp as transactiondate, category_id AS categoryid, t.created_at AS CreatedAt,
-                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
+                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp,
+                    t.savings_goal_id as SavingsGoalID, t.is_savings as IsSavings, sg.title as SavingsGoalTitle, sg.color as SavingsGoalColor
                     FROM transactions t
                     LEFT JOIN transaction_category tc ON t.category_id = tc.id
                     LEFT JOIN transaction_source ts ON t.source_id = ts.id
                     LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
-                    WHERE budget_id = @budgetID AND DATE(transaction_date) BETWEEN DATE(@startDate) AND DATE(@endDate)";
+                    LEFT JOIN savings_goals sg ON t.savings_goal_id = sg.id
+                    WHERE t.budget_id = @budgetID AND DATE(transaction_date) BETWEEN DATE(@startDate) AND DATE(@endDate)";
             users = (await conn.QueryAsync<Transaction>(query, new { budgetID, startDate, endDate })).ToList();
+            return users;
+        }
+        public async Task<List<Transaction>> GetTransactions(Guid budgetID)
+        {
+            var users = new List<Transaction>();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, tc.color AS categorycolor, ts.name AS sourcename, tt.name AS transactiontype,
+                    transaction_date::timestamp as transactiondate, category_id AS categoryid, t.created_at AS CreatedAt,
+                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp,
+                    t.savings_goal_id as SavingsGoalID, t.is_savings as IsSavings  
+                    FROM transactions t
+                    LEFT JOIN transaction_category tc ON t.category_id = tc.id
+                    LEFT JOIN transaction_source ts ON t.source_id = ts.id
+                    LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
+                    WHERE budget_id = @budgetID";
+            users = (await conn.QueryAsync<Transaction>(query, new { budgetID })).ToList();
             return users;
         }
 
@@ -145,13 +166,15 @@ namespace TropicalBudget.Services
             var users = new Transaction();
 
             using var conn = new NpgsqlConnection(_connectionString);
-            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype, budget_id AS budgetid,
+            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, ts.name AS sourcename, tt.name AS transactiontype, t.budget_id AS budgetid,
                     transaction_date::timestamp as transactiondate, category_id AS categoryid, 
-                    source_id as sourceid,tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp  
+                    source_id as sourceid,tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp,
+                    t.savings_goal_id as SavingsGoalID, t.is_savings as IsSavings, sg.title as SavingsGoalTitle, sg.color as SavingsGoalColor  
                     FROM transactions t
                     LEFT JOIN transaction_category tc ON t.category_id = tc.id
                     LEFT JOIN transaction_source ts ON t.source_id = ts.id
                     LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
+                    LEFT JOIN savings_goals sg ON t.savings_goal_id = sg.id
                     WHERE t.id = @transaction_id";
             users = (await conn.QueryAsync<Transaction>(query, new { transaction_id })).SingleOrDefault();
             return users;
@@ -162,18 +185,19 @@ namespace TropicalBudget.Services
             using var conn = new NpgsqlConnection(_connectionString);
 
             string query = @"INSERT INTO transactions 
-                (amount, note, transaction_date, category_id, source_id, transaction_type_id, budget_id)
+                (amount, note, transaction_date, category_id, source_id, transaction_type_id, budget_id, savings_goal_id)
                 VALUES 
-                (@amount, @note, @transaction_date, @category_id, @source_id, @transaction_type_id, @budget_id)";
+                (@amount, @note, @transaction_date, @category_id, @source_id, @transaction_type_id, @budget_id, @savings_goal_id)";
             int result = (await conn.ExecuteAsync(query, new
             {
                 amount = transaction.Amount,
                 note = transaction.Note,
                 transaction_date = transaction.TransactionDate,
-                category_id = transaction.CategoryID,
+                category_id = (Guid?)(transaction.CategoryID == Guid.Empty ? null : transaction.CategoryID),
                 source_id = transaction.SourceID,
                 transaction_type_id = transaction.TransactionTypeID,
-                budget_id = transaction.BudgetID
+                budget_id = transaction.BudgetID,
+                savings_goal_id = (Guid?)(transaction.SavingsGoalID == Guid.Empty ? null : transaction.SavingsGoalID)
             }
                 ));
         }
@@ -188,18 +212,20 @@ namespace TropicalBudget.Services
                     category_id = @category_id,
                     source_id = @source_id,
                     transaction_type_id = @transaction_type_id,
-                    budget_id = @budget_id
+                    budget_id = @budget_id,
+                    savings_goal_id = @savings_goal_id
                     WHERE ID = @ID";
             int result = (await conn.ExecuteAsync(query, new
             {
                 amount = transaction.Amount,
                 note = transaction.Note,
                 transaction_date = transaction.TransactionDate,
-                category_id = transaction.CategoryID,
+                category_id = (Guid?)(transaction.CategoryID == Guid.Empty ? null : transaction.CategoryID),
                 source_id = transaction.SourceID,
                 transaction_type_id = transaction.TransactionTypeID,
                 budget_id = transaction.BudgetID,
-                ID = transaction.ID
+                ID = transaction.ID,
+                savings_goal_id = (Guid?)(transaction.SavingsGoalID == Guid.Empty ? null : transaction.SavingsGoalID)
             }
                 ));
         }
@@ -277,6 +303,85 @@ namespace TropicalBudget.Services
         }
         #endregion
 
+        #region Savings Goals
+        public async Task<List<SavingsGoal>> GetSavingsGoals(Guid budgetID)
+        {
+            var users = new List<SavingsGoal>();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT id, budget_id as budgetID, title, goal_amount as GoalAmount, created_at as createdat, color
+                    FROM savings_goals WHERE budget_id = @budgetID";
+            users = (await conn.QueryAsync<SavingsGoal>(query, new { budgetID })).ToList();
+            return users;
+        }
+        public async Task<SavingsGoal> GetSavingsGoal(Guid ID, string userID)
+        {
+            var users = new SavingsGoal();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT sg.id, sg.budget_id as budgetID, sg.title, sg.goal_amount as GoalAmount, sg.created_at as createdat, sg.color
+                    FROM savings_goals sg 
+                    LEFT JOIN budget b ON sg.budget_id = b.id
+                    WHERE sg.id = @ID AND b.user_id = @userID";
+
+            // LEFT JOIN budget b ON p.budget_id = b.id
+            // AND b.user_id = @userID
+            users = (await conn.QueryAsync<SavingsGoal>(query, new { ID, userID })).FirstOrDefault();
+            return users;
+        }
+        public async Task InsertSavingsGoal(SavingsGoal savingsGoal)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"INSERT INTO savings_goals 
+                (goal_amount, title, budget_id, color)
+                VALUES 
+                (@goal_amount, @title, @budget_id, @color)";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                budget_id = savingsGoal.BudgetID,
+                goal_amount = savingsGoal.GoalAmount,
+                title = savingsGoal.Title,
+                color = savingsGoal.Color
+            }
+                ));
+        }
+
+        public async Task UpdateSavingsGoal(SavingsGoal savingsGoal)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"UPDATE savings_goals 
+                SET goal_amount = @goal_amount,
+                    title = @title,
+                    budget_id = @budget_id,
+                    color = @color
+                    WHERE ID = @ID";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                goal_amount = savingsGoal.GoalAmount,
+                title = savingsGoal.Title,
+                budget_id = savingsGoal.BudgetID,
+                color = savingsGoal.Color,
+                ID = savingsGoal.ID
+            }
+                ));
+        }
+
+        public async Task DeleteSavingsGoal(Guid savingsGoalID)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+
+            string query = @"DELETE FROM savings_goals 
+                WHERE ID = @savingsGoalID";
+            int result = (await conn.ExecuteAsync(query, new
+            {
+                savingsGoalID
+            }));
+        }
+
+        #endregion
+
         #region Sources
         public async Task<List<TransactionSource>> GetTransactionSources()
         {
@@ -351,10 +456,12 @@ namespace TropicalBudget.Services
 
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT p.id, p.budget_id AS budgetid, p.category_id AS categoryid, 
-                            p.amount, p.month, p.year, p.transaction_type_id AS transactiontypeid, tc.name AS categoryname, tc.color AS categorycolor, tt.name AS transactiontype
+                            p.amount, p.month, p.year, p.transaction_type_id AS transactiontypeid, tc.name AS categoryname, tc.color AS categorycolor, tt.name AS transactiontype,
+                            p.savings_goal_id as SavingsGoalID, p.is_savings as IsSavings, sg.title as SavingsGoalTitle, sg.color as SavingsGoalColor
                             FROM budget_plan p
                             LEFT JOIN transaction_category tc ON p.category_id = tc.id
                             LEFT JOIN transaction_type tt ON p.transaction_type_id = tt.id  
+                            LEFT JOIN savings_goals sg ON p.savings_goal_id = sg.id
                             WHERE p.budget_id = @budgetID";
             users = (await conn.QueryAsync<PlanItem>(query, new { budgetID })).ToList();
             return users;
@@ -365,11 +472,15 @@ namespace TropicalBudget.Services
 
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT p.id, p.budget_id AS budgetid, p.category_id AS categoryid, 
-                            p.amount, p.month, p.year, p.transaction_type_id AS transactiontypeid, tc.name AS categoryname, tc.color AS categorycolor, tt.name AS transactiontype
+                            p.amount, p.month, p.year, p.transaction_type_id AS transactiontypeid, 
+                            tc.name AS categoryname, tc.color AS categorycolor, tt.name AS transactiontype,
+                            p.savings_goal_id as SavingsGoalID, p.is_savings as IsSavings, sg.title as SavingsGoalTitle, 
+                            sg.color as SavingsGoalColor
                             FROM budget_plan p
                             LEFT JOIN transaction_category tc ON p.category_id = tc.id
                             LEFT JOIN transaction_type tt ON p.transaction_type_id = tt.id  
                             LEFT JOIN budget b ON p.budget_id = b.id
+                            LEFT JOIN savings_goals sg ON p.savings_goal_id = sg.id
                             WHERE p.id = @planID AND b.user_id = @userID";
             users = (await conn.QueryAsync<PlanItem>(query, new { planID, userID })).FirstOrDefault();
             return users;
@@ -380,17 +491,18 @@ namespace TropicalBudget.Services
             using var conn = new NpgsqlConnection(_connectionString);
 
             string query = @"INSERT INTO budget_plan 
-                (amount, month, year, category_id, transaction_type_id, budget_id)
+                (amount, month, year, category_id, transaction_type_id, budget_id, savings_goal_id)
                 VALUES 
-                (@amount, @month, @year, @category_id, @transaction_type_id, @budget_id)";
+                (@amount, @month, @year, @category_id, @transaction_type_id, @budget_id, @savings_goal_id)";
             int result = (await conn.ExecuteAsync(query, new
             {
                 budget_id = planItem.BudgetID,
-                category_id = planItem.CategoryID,
+                category_id = (Guid?)(planItem.CategoryID == Guid.Empty ? null : planItem.CategoryID),
                 amount = planItem.Amount,
                 month = planItem.Month,
                 year = planItem.Year,
                 transaction_type_id = planItem.TransactionTypeID,
+                savings_goal_id = (Guid?)(planItem.SavingsGoalID == Guid.Empty ? null : planItem.SavingsGoalID)
             }
                 ));
         }
@@ -404,17 +516,19 @@ namespace TropicalBudget.Services
                     year = @year,
                     category_id = @category_id,
                     transaction_type_id = @transaction_type_id,
-                    budget_id = @budget_id
+                    budget_id = @budget_id,
+                    savings_goal_id = @savings_goal_id
                     WHERE ID = @ID";
             int result = (await conn.ExecuteAsync(query, new
             {
                 amount = planItem.Amount,
                 month = planItem.Month,
                 year = planItem.Year,
-                category_id = planItem.CategoryID,
+                category_id = (Guid?)(planItem.CategoryID == Guid.Empty ? null : planItem.CategoryID),
                 transaction_type_id = planItem.TransactionTypeID,
                 budget_id = planItem.BudgetID,
-                ID = planItem.ID
+                ID = planItem.ID,
+                savings_goal_id = (Guid?)(planItem.SavingsGoalID == Guid.Empty ? null : planItem.SavingsGoalID)
             }
                 ));
         }

@@ -7,6 +7,8 @@ namespace TropicalBudget.Utilities
     {
         public static string TRANSACTION_TYPE_EXPENSE = "Expense";
         public static string TRANSACTION_TYPE_INCOME = "Income";
+        public static string TRANSACTION_TYPE_SAVINGS_ADD = "Add to Savings";
+        public static string TRANSACTION_TYPE_SAVINGS_WITHDRAW = "Withdraw from Savings";
         public static decimal GetExpenses(List<Transaction> transactions)
         {
             decimal expenses = 0;
@@ -62,7 +64,7 @@ namespace TropicalBudget.Utilities
                 }
 
             });
-            
+
             return transactionExports;
         }
     }

@@ -1,9 +1,15 @@
-﻿@model Transaction
+﻿@using TropicalBudget.Utilities
+@model Transaction
 @{
     ViewData["Title"] = "Edit Transaction";
     List<TransactionCategory> transactionCategories = (List<TransactionCategory>)TempData["TransactionCategories"];
     List<TransactionSource> transactionSources = (List<TransactionSource>)TempData["TransactionSources"];
     List<TransactionType> transactionTypes = (List<TransactionType>)TempData["TransactionTypes"];
+    List<SavingsGoal> savingsGoals = (List<SavingsGoal>)TempData["SavingsGoals"];
+    Dictionary<string, string> newTransactionRouteData = new()
+    {
+        {"budgetID", Model.BudgetID.ToString()}
+    };
 }
 
 <div class="text-center">
@@ -22,6 +28,19 @@
                     </div>
                     @Html.TextBoxFor(x => x.Amount, new { @placeholder = "Amount", @type = "number", @min = 0, @class = "form-control", @step = "0.01", @required = true })
                 </div>
+                @* @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
+                @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select", @required = true }) *@
+                 @Html.LabelFor(x => x.UiTransactionType, "Transaction Type")
+                @Html.DropDownListFor(x => x.UiTransactionType, new List<SelectListItem>(){
+                    new SelectListItem {Value = "income", Text = "Income"},
+                    new SelectListItem {Value = "expense", Text = "Expense"},
+                    new SelectListItem {Value = "add_savings", Text = "Add to Savings"},
+                    new SelectListItem {Value = "withdraw_savings", Text = "Withdraw from Savings"},
+                    
+                    }, new { @class = "form-select", @onchange = "onTransactionTypeChanged(this.options[this.selectedIndex].text)", @required = true })
+
+                <div id="category-section" class="@(Model.IsSavings? "d-none":"d-flex") flex-column gap-2">
+                
                 @if (transactionCategories == null || transactionCategories.Count <= 0)
                 {
                             <div class="alert alert-danger" role="alert">
@@ -35,21 +54,36 @@
                         <i style="cursor:pointer" class="bi bi-pencil-fill text-white px-3 py-2 fs-6 bg-primary rounded"></i>
                     </a>
                 </div>
+                </div>
+                <div id="savings-goal-section" class="@(Model.IsSavings?"d-flex":"d-none") flex-column gap-2">
+                   @if (savingsGoals == null || savingsGoals.Count <= 0)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            No savings goals set. Please <a asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="newTransactionRouteData">set a goal</a> first.
+                        </div>
+                    }
+                    @Html.LabelFor(x =>x.SavingsGoalID, "Savings Goal")
+                    <div class="d-flex align-items-center gap-2">
+                        @Html.DropDownListFor(x => x.SavingsGoalID, new SelectList(savingsGoals, "ID", "Title"), new { @class = "form-select", @required = true })
+                        <a asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="newTransactionRouteData">
+                            <i style="cursor:pointer" class="bi bi-pencil-fill text-white px-3 py-2 fs-6 bg-primary rounded"></i>
+                        </a>
+                    </div>
+                </div>
                 @if (transactionSources == null || transactionSources.Count <= 0)
                 {
                             <div class="alert alert-danger" role="alert">
                                 No sources available. Please <a asp-controller="Sources" asp-action="Index">add a source</a> first.
                             </div>
                 }
-                @Html.LabelFor(x =>x.SourceID, "From")
+                @Html.LabelFor(x =>x.SourceID, "From", new{ @id ="source-label"})
                 <div class="d-flex align-items-center gap-2">
                     @Html.DropDownListFor(x => x.SourceID, new SelectList(transactionSources, "ID", "Name"), new { @class = "form-select", @required = true })
                     <a asp-controller="Sources" asp-action="Index">
                         <i style="cursor:pointer" class="bi bi-pencil-fill text-white px-3 py-2 fs-6 bg-primary rounded"></i>
                     </a>
                 </div>
-                @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
-                @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select", @required = true })
+                
                 @Html.LabelFor(x => x.TransactionDate, "Date")
                 @Html.TextBoxFor(x => x.TransactionDate, "{0:yyyy-MM-dd}", new { @type = "date", @class = "form-control", @required = true })
                 @Html.LabelFor(x => x.Note)
@@ -66,5 +100,37 @@
 <script>
     const navigateToHome = () =>{
         location.href = "@Url.Action("Index", "Transaction")" +"?budgetID=@(Model.BudgetID.ToString())";
+    }
+
+        const onTransactionTypeChanged = (transactionType) =>  {
+        const source_label = document.getElementById('source-label');
+        const category_section = document.getElementById('category-section');
+        const savings_goal_section = document.getElementById('savings-goal-section');
+        if(transactionType == "@TransactionUtility.TRANSACTION_TYPE_EXPENSE"){
+            source_label.innerText = "From";
+            category_section.classList.add("d-flex")
+            category_section.classList.remove("d-none")
+            savings_goal_section.classList.add("d-none")
+            savings_goal_section.classList.remove("d-flex")
+        }else if(transactionType == "@TransactionUtility.TRANSACTION_TYPE_INCOME"){
+            source_label.innerText = "To";
+            category_section.classList.add("d-flex")
+            category_section.classList.remove("d-none")
+            savings_goal_section.classList.add("d-none")
+            savings_goal_section.classList.remove("d-flex")
+
+        }else if(transactionType == "@TransactionUtility.TRANSACTION_TYPE_SAVINGS_ADD"){
+            source_label.innerText = "From";
+            category_section.classList.add("d-none")
+            category_section.classList.remove("d-flex")
+            savings_goal_section.classList.add("d-flex")
+            savings_goal_section.classList.remove("d-none")
+        }else if(transactionType == "@TransactionUtility.TRANSACTION_TYPE_SAVINGS_WITHDRAW"){
+            source_label.innerText = "To";
+            category_section.classList.add("d-none")
+            category_section.classList.remove("d-flex")
+            savings_goal_section.classList.add("d-flex")
+            savings_goal_section.classList.remove("d-none")
+        }
     }
 </script>

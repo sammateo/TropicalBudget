@@ -1,4 +1,5 @@
-﻿@model Transaction
+﻿@using TropicalBudget.Utilities
+@model Transaction
 @*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
@@ -8,28 +9,45 @@
 
 <div class="d-flex gap-2 justify-content-between align-items-center bg-light rounded px-4 py-2">
     <div class="d-flex flex-wrap align-items-center gap-2">
-        <span class="rounded-circle" style="width:20px; height:20px; background-color: @transaction.CategoryColor; display:block"></span>
+        <span class="rounded-circle"
+              style="width:20px; height:20px; background-color: @(transaction.IsSavings? transaction.SavingsGoalColor :transaction.CategoryColor); display:block"></span>
 
         <div class="d-flex flex-column gap-0">
-            @if(!string.IsNullOrWhiteSpace(transaction.Note)){
+            @if (!string.IsNullOrWhiteSpace(transaction.Note))
+            {
                 <span class="fs-4 fw-normal">@(transaction.Note)</span>
-                <span class="fs-6 fw-light">@(transaction.CategoryName)</span>
-            }
-            else{
-                <span class="fs-4 fw-normal">@(transaction.CategoryName)</span>
-            }
-        </div>
-    </div>
-    <div class="d-flex gap-2 align-items-center flex-wrap justify-content-end">
-        @if(transaction.TransactionType.Equals("Income")){
-            <span style="color:green" class="fw-bold fs-5">+@($"{transaction.Amount:c}")</span>
-        }else{
-            <span class="fw-bold fs-5">@($"{transaction.Amount:c}")</span>
-        }
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-            <i style="cursor:pointer" onclick="editTransaction('@(transaction.ID)')" class="bi bi-pencil-fill text-white px-3 py-2 fs-4 bg-primary rounded"></i>
-            <i style="cursor:pointer" onclick="deleteTransaction('@(transaction.ID)')" class="bi bi-trash text-white px-3 py-2 fs-4 bg-danger rounded"></i>
-        </div>
-    </div>
+                <span class="fs-6 fw-light">@(transaction.IsSavings? transaction.SavingsGoalTitle :
+                    transaction.CategoryName)</span>
+                }
+            else
+                {
+                    <span class="fs-4 fw-normal">@(transaction.IsSavings? transaction.SavingsGoalTitle :
+                        transaction.CategoryName)</span>
+                    }
+                    @if (transaction.IsSavings)
+                    {
+                        <span
+                            style="color: gray; font-size:small;">@(transaction.TransactionType.Equals(TransactionUtility.TRANSACTION_TYPE_EXPENSE)?
+                                                                                                                     "savings contribution" : "savings withdrawal")</span>
+
+                        }
+                    </div>
+                </div>
+                <div class="d-flex gap-2 align-items-center flex-wrap justify-content-end">
+                    @if (transaction.TransactionType.Equals("Income"))
+                    {
+                        <span style="color:green" class="fw-bold fs-5">+@($"{transaction.Amount:c}")</span>
+                    }
+                    else
+                    {
+                        <span class="fw-bold fs-5">@($"{transaction.Amount:c}")</span>
+                    }
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <i style="cursor:pointer" onclick="editTransaction('@(transaction.ID)')"
+                           class="bi bi-pencil-fill text-white px-3 py-2 fs-4 bg-primary rounded"></i>
+                        <i style="cursor:pointer" onclick="deleteTransaction('@(transaction.ID)')"
+                           class="bi bi-trash text-white px-3 py-2 fs-4 bg-danger rounded"></i>
+                    </div>
+                </div>
                
-</div>
+            </div>
