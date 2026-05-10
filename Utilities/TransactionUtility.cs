@@ -57,6 +57,8 @@ namespace TropicalBudget.Utilities
                         TransactionDate = DateOnly.FromDateTime(transaction.TransactionDate),
                         Category = transaction.CategoryName,
                         CategoryColor = transaction.CategoryColor,
+                        SavingsGoal = transaction.SavingsGoalTitle,
+                        SavingsGoalColor = transaction.SavingsGoalColor,
                         Source = transaction.SourceName,
                         TransactionType = transaction.TransactionType,
                         CreatedAt = transaction.CreatedAt
