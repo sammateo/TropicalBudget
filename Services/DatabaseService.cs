@@ -250,7 +250,7 @@ namespace TropicalBudget.Services
 
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT id, name, user_id AS userid, color
-                    FROM transaction_category WHERE user_id = @userID";
+                    FROM transaction_category WHERE user_id = @userID order by name";
             users = (await conn.QueryAsync<TransactionCategory>(query, new { userID })).ToList();
             return users;
         }
@@ -310,7 +310,7 @@ namespace TropicalBudget.Services
 
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT id, budget_id as budgetID, title, goal_amount as GoalAmount, created_at as createdat, color
-                    FROM savings_goals WHERE budget_id = @budgetID";
+                    FROM savings_goals WHERE budget_id = @budgetID order by created_at desc";
             users = (await conn.QueryAsync<SavingsGoal>(query, new { budgetID })).ToList();
             return users;
         }
@@ -398,7 +398,7 @@ namespace TropicalBudget.Services
             var users = new List<TransactionSource>();
             using var conn = new NpgsqlConnection(_connectionString);
             string query = @"SELECT id, name, user_id AS userid
-                    FROM transaction_source WHERE user_id = @userID";
+                    FROM transaction_source WHERE user_id = @userID order by name";
             users = (await conn.QueryAsync<TransactionSource>(query, new { userID })).ToList();
             return users;
         }
@@ -462,7 +462,7 @@ namespace TropicalBudget.Services
                             LEFT JOIN transaction_category tc ON p.category_id = tc.id
                             LEFT JOIN transaction_type tt ON p.transaction_type_id = tt.id  
                             LEFT JOIN savings_goals sg ON p.savings_goal_id = sg.id
-                            WHERE p.budget_id = @budgetID";
+                            WHERE p.budget_id = @budgetID order by tc.name, sg.title";
             users = (await conn.QueryAsync<PlanItem>(query, new { budgetID })).ToList();
             return users;
         }
