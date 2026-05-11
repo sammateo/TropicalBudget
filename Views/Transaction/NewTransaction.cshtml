@@ -50,7 +50,7 @@
                     }
                     @Html.LabelFor(x =>x.NewTransaction.CategoryID, "Category")
                     <div class="d-flex align-items-center gap-2">
-                        @Html.DropDownListFor(x => x.NewTransaction.CategoryID, new SelectList(transactionCategories, "ID", "Name"), new { @class = "form-select", @required = true })
+                        @Html.DropDownListFor(x => x.NewTransaction.CategoryID, new SelectList(transactionCategories, "ID", "Name"), new { @class = "form-select", @id="category-dropdown" })
                         <a asp-controller="Category" asp-action="Index">
                             <i style="cursor:pointer" class="bi bi-pencil-fill text-white px-3 py-2 fs-6 bg-primary rounded"></i>
                         </a>
@@ -65,7 +65,7 @@
                     }
                     @Html.LabelFor(x =>x.NewTransaction.SavingsGoalID, "Savings Goal")
                     <div class="d-flex align-items-center gap-2">
-                        @Html.DropDownListFor(x => x.NewTransaction.SavingsGoalID, new SelectList(savingsGoals, "ID", "Title"), new { @class = "form-select", @required = true })
+                        @Html.DropDownListFor(x => x.NewTransaction.SavingsGoalID, new SelectList(savingsGoals, "ID", "Title"), new { @class = "form-select", @id="savings-goal-dropdown" })
                         <a asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="newTransactionRouteData">
                             <i style="cursor:pointer" class="bi bi-pencil-fill text-white px-3 py-2 fs-6 bg-primary rounded"></i>
                         </a>
@@ -120,31 +120,41 @@
         const source_label = document.getElementById('source-label');
         const category_section = document.getElementById('category-section');
         const savings_goal_section = document.getElementById('savings-goal-section');
+        const categoryDropdown = document.getElementById('category-dropdown');
+        const savingsGoalDropdown = document.getElementById('savings-goal-dropdown');
+
         if(transactionType == "@TransactionUtility.TRANSACTION_TYPE_EXPENSE"){
             source_label.innerText = "From";
             category_section.classList.add("d-flex")
             category_section.classList.remove("d-none")
             savings_goal_section.classList.add("d-none")
             savings_goal_section.classList.remove("d-flex")
+            categoryDropdown.required = true;
+            savingsGoalDropdown.required = false;
         }else if(transactionType == "@TransactionUtility.TRANSACTION_TYPE_INCOME"){
             source_label.innerText = "To";
             category_section.classList.add("d-flex")
             category_section.classList.remove("d-none")
             savings_goal_section.classList.add("d-none")
             savings_goal_section.classList.remove("d-flex")
-
+            categoryDropdown.required = true;
+            savingsGoalDropdown.required = false;
         }else if(transactionType == "@TransactionUtility.TRANSACTION_TYPE_SAVINGS_ADD"){
             source_label.innerText = "From";
             category_section.classList.add("d-none")
             category_section.classList.remove("d-flex")
             savings_goal_section.classList.add("d-flex")
             savings_goal_section.classList.remove("d-none")
+            categoryDropdown.required = false;
+            savingsGoalDropdown.required = true;
         }else if(transactionType == "@TransactionUtility.TRANSACTION_TYPE_SAVINGS_WITHDRAW"){
             source_label.innerText = "To";
             category_section.classList.add("d-none")
             category_section.classList.remove("d-flex")
             savings_goal_section.classList.add("d-flex")
             savings_goal_section.classList.remove("d-none")
+            categoryDropdown.required = false;
+            savingsGoalDropdown.required = true;
         }
     }
 </script>
