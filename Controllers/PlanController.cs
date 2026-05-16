@@ -90,6 +90,55 @@ namespace TropicalBudget.Controllers
 
             return View("NewPlanItem", newPlanItem);
         }
+        public async Task<IActionResult> NewGoal(Guid budgetID, int? year, int? month)
+        {
+            if (budgetID == Guid.Empty || year == null || month == null)
+                return RedirectToAction("Index", "Home");
+
+            PlanItem newPlanItem = new();
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                List<PlanItem> planItems = await _db.GetPlanItems(budgetID);
+                List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
+                List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
+                List<SavingsGoal> savingsGoals = await _db.GetSavingsGoals(budgetID);
+
+                foreach (TransactionType transactionType in transactionTypes)
+                {
+                    if (transactionType.Name == TransactionUtility.TRANSACTION_TYPE_EXPENSE)
+                    {
+                        transactionType.Name = TransactionUtility.TRANSACTION_TYPE_SAVINGS_ADD;
+                    }
+                    if (transactionType.Name == TransactionUtility.TRANSACTION_TYPE_INCOME)
+                    {
+                        transactionType.Name = TransactionUtility.TRANSACTION_TYPE_SAVINGS_WITHDRAW;
+                    }
+
+                }
+
+                //get categories not already in the plan
+                savingsGoals = savingsGoals.Where(goal => !planItems.Any(item => item.SavingsGoalID == goal.ID)).ToList();
+                savingsGoals = savingsGoals.OrderBy(goal => goal.Title).ToList();
+                transactionCategories = transactionCategories.Where(cat => !planItems.Any(item => item.CategoryID == cat.ID)).ToList();
+                transactionCategories = transactionCategories.OrderBy(cat => cat.Name).ToList();
+                TempData["SavingsGoals"] = savingsGoals;
+                TempData["TransactionTypes"] = transactionTypes;
+                newPlanItem.BudgetID = budgetID;
+                newPlanItem.Month = month.Value;
+                newPlanItem.Year = year.Value;
+                if (transactionTypes.Any(type => type.Name.Equals(TransactionUtility.TRANSACTION_TYPE_SAVINGS_ADD)))
+                {
+                    newPlanItem.TransactionTypeID = transactionTypes.FirstOrDefault(type => type.Name.Equals(TransactionUtility.TRANSACTION_TYPE_SAVINGS_ADD)).ID;
+                }
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
+
+            return View("NewSavingsGoalPlanItem", newPlanItem);
+        }
 
         public async Task<IActionResult> Edit(Guid budgetID, Guid planID, int? year, int? month)
         {
@@ -142,6 +191,64 @@ namespace TropicalBudget.Controllers
             }
             return View("EditPlanItem", editPlanItem);
         }
+        public async Task<IActionResult> EditGoal(Guid budgetID, Guid planID, int? year, int? month)
+        {
+            if (budgetID == Guid.Empty || planID == Guid.Empty || year == null || month == null)
+                return RedirectToAction("Index", "Home");
+
+            DateTime currentDate = DateTime.Now;
+            string currentMonth = string.Empty;
+            DateTime startDate;
+            DateTime endDate;
+            if (year == null || month == null)
+            {
+                currentMonth = $"{currentDate.ToString("MMMM")}, {currentDate.ToString("yyyy")}";
+                //get start and end date of the month
+                startDate = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0);
+                endDate = startDate.AddMonths(1).AddSeconds(-1);
+            }
+            else
+            {
+                if (month.Value > 12 || month.Value < 1)
+                {
+                    return RedirectToAction("Index");
+                }
+                startDate = new DateTime(year.Value, month.Value, 1, 0, 0, 0);
+                endDate = startDate.AddMonths(1).AddSeconds(-1);
+                currentMonth = $"{startDate.ToString("MMMM")}, {startDate.ToString("yyyy")}";
+            }
+            PlanItem editPlanItem = new();
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                List<PlanItem> planItems = await _db.GetPlanItems(budgetID);
+                editPlanItem = await _db.GetPlanItem(planID, userID);
+                editPlanItem.Year = year.Value;
+                editPlanItem.Month = month.Value;
+                List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
+                List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
+                List<Transaction> transactions = await _db.GetTransactions(budgetID, startDate, endDate);
+                List<SavingsGoal> savingsGoals = await _db.GetSavingsGoals(budgetID);
+
+
+                //get categories not already in the plan
+                savingsGoals = savingsGoals.Where(goal => !planItems.Any(item => item.SavingsGoalID == goal.ID) || goal.ID == editPlanItem.SavingsGoalID).ToList();
+                savingsGoals = savingsGoals.OrderBy(goal => goal.Title).ToList();
+                // transactionCategories = transactionCategories.Where(cat => !planItems.Any(item => item.CategoryID == cat.ID) || cat.ID == editPlanItem.CategoryID).ToList();
+                // transactionCategories = transactionCategories.OrderBy(cat => cat.Name).ToList();
+                // TempData["TransactionCategories"] = transactionCategories;
+                TempData["SavingsGoals"] = savingsGoals;
+                TempData["TransactionTypes"] = transactionTypes;
+                TempData["Transactions"] = transactions;
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
+            return View("EditSavingsGoalPlanItem", editPlanItem);
+        }
+
+
 
         public async Task<IActionResult> AddNewPlanItem(PlanItem planItem)
         {

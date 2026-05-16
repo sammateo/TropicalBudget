@@ -13,6 +13,16 @@ namespace TropicalBudget.Models
         [Column("category_id")]
         public Guid CategoryID { get; set; }
 
+        [Column("savings_goal_id")]
+        public Guid SavingsGoalID { get; set; }
+
+        [Column("is_savings")]
+        public bool IsSavings { get; set; }
+
+        public string SavingsGoalColor { get; set; }
+
+        public string SavingsGoalTitle { get; set; }
+
         [Column("amount")]
         public decimal Amount { get; set; }
 

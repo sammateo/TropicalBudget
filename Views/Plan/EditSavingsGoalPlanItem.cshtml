@@ -2,7 +2,7 @@
 @model PlanItem
 @{
     ViewData["Title"] = "Edit Plan Item";
-    List<TransactionCategory> transactionCategories = (List<TransactionCategory>)TempData["TransactionCategories"];
+    List<SavingsGoal> savingsGoals = (List<SavingsGoal>)TempData["SavingsGoals"];
     List<TransactionType> transactionTypes = (List<TransactionType>)TempData["TransactionTypes"];
         List<Transaction> transactions = (List<Transaction>)TempData["Transactions"];
 }
@@ -26,15 +26,15 @@
                     </div>
                     @Html.TextBoxFor(x => x.Amount, new { @placeholder = "Amount", @type = "number", @min = 0, @class = "form-control", @step = "0.01", @required = true })
                 </div>
-                @if (transactionCategories == null || transactionCategories.Count <= 0)
+                @if (savingsGoals == null || savingsGoals.Count <= 0)
                 {
                     <div class="alert alert-danger" role="alert">
-                        No categories available. Please <a asp-controller="Category" asp-action="Index">add a category</a> first.
+                        No Savings Goals available. Please <a asp-controller="SavingsGoals" asp-action="Index">set a goal</a> first.
                     </div>
                 }
-                @Html.LabelFor(x => x.CategoryID, "Category")
-                <p class="subtext small">*Categories already assigned a plan will not show in this list</p>
-                @Html.DropDownListFor(x => x.CategoryID, new SelectList(transactionCategories, "ID", "Name"), new { @class = "form-select", @required = true, @onchange = "onCategoryChanged(this.options[this.selectedIndex].value)" })
+                @Html.LabelFor(x => x.SavingsGoalID, "Savings Goal")
+                <p class="subtext small">*Savings Goals already assigned a plan will not show in this list</p>
+                @Html.DropDownListFor(x => x.SavingsGoalID, new SelectList(savingsGoals, "ID", "Title"), new { @class = "form-select", @required = true, @onchange = "onSavingsGoalChanged(this.options[this.selectedIndex].value)" })
                 @Html.LabelFor(x => x.TransactionTypeID, "Transaction Type")
                 @Html.DropDownListFor(x => x.TransactionTypeID, new SelectList(transactionTypes, "ID", "Name"), new { @class = "form-select", @onchange = "onTransactionTypeChanged(this.options[this.selectedIndex].text)", @required = true })
                 <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
@@ -56,13 +56,13 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        onCategoryChanged('@Model.CategoryID')
+        onSavingsGoalChanged('@Model.SavingsGoalID')
 })
 
-    const onCategoryChanged = (category) => {
+    const onSavingsGoalChanged = (savingsGoal) => {
         var transactionList = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(transactions));
         
-        transactionList = transactionList.filter(list => list.CategoryID == category)
+        transactionList = transactionList.filter(list => list.SavingsGoalID == savingsGoal)
 
         transactionList.sort((a,b) => new Date(a.TransactionDate)-new Date(b.TransactionDate));
 
@@ -97,11 +97,11 @@
                 });
 
                 transactionsHtml+=`
-                <div class="d-flex flex-column gap-2 mb-2" style="border-left: 2px solid ${item.CategoryColor}">
+                <div class="d-flex flex-column gap-2 mb-2" style="border-left: 2px solid ${item.SavingsGoalColor}">
                     <div class="d-flex align-items-center justify-content-between bg-light py-2 px-2 rounded">
                         <div class="d-flex flex-column">
                             <span class="fs-4 fw-normal">${item.Note ?? ""}</span>
-                            <span class="${item.Note? "fs-6 fw-light":"fs-4 fw-normal"}">${item.CategoryName}</span>
+                            <span class="${item.Note? "fs-6 fw-light":"fs-4 fw-normal"}">${item.SavingsGoalTitle}</span>
                         </div>
                         <span class="fw-bold fs-5 ${item.TransactionType == "Income" ? "text-success":""}">${item.TransactionType == "Income" ? "+":""}${formatter.format(item.Amount)}</span>
                     </div>

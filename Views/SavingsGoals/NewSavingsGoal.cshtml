@@ -1,0 +1,42 @@
+﻿@using TropicalBudget.Utilities
+@model SavingsGoal
+@{
+    ViewData["Title"] = "New Savings Goal";
+}
+
+<div class="text-center">
+    <h1 class="display-4">New Savings Goal</h1>
+    <div>
+        @using (Html.BeginForm("AddNewSavingsGoal", "SavingsGoals"))
+        {
+            @Html.AntiForgeryToken()
+            ;
+            <div class="d-flex flex-column gap-2">
+                @Html.HiddenFor(x => x.BudgetID)
+                @Html.HiddenFor(x => x.Year)
+                @Html.HiddenFor(x => x.Month)
+                @Html.LabelFor(x => x.Title)
+                @Html.TextBoxFor(x => x.Title)
+                @Html.LabelFor(x => x.Color)
+                @Html.TextBoxFor(x => x.Color, new { @type = "color", @class = "bg-light rounded border border-grey", @style = "width:100%" })
+                @Html.LabelFor(x => x.GoalAmount)
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">$</span>
+                    </div>
+                    @Html.TextBoxFor(x => x.GoalAmount, new { @placeholder = "Amount", @type = "number", @min = 0, @class = "form-control", @step = "0.01", @required = true })
+                </div>
+                <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
+                <input type="button" name="ExitButton" onclick="navigateToHome()" class="btn btn-outline-primary" value="Exit" />
+
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    const navigateToHome = () =>{
+        location.href = "@Url.Action("Index", "SavingsGoals")" +"?budgetID=@(Model.BudgetID.ToString())&year=@(Model.Year)&month=@(Model.Month)";
+    }
+    
+</script>

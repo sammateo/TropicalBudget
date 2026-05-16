@@ -3,6 +3,7 @@ using CsvHelper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TropicalBudget.Models;
+using TropicalBudget.Models.ViewModels;
 using TropicalBudget.Services;
 using TropicalBudget.Utilities;
 
@@ -57,35 +58,60 @@ namespace TropicalBudget.Controllers
             {
                 SentrySdk.CaptureException(ex);
             }
-            
+
             return View("ViewTransactions", budgetTransactions);
         }
 
         public async Task<IActionResult> New(Guid budgetID)
         {
             Transaction newTransaction = new();
+            NewTransactionViewModel newTransactionViewModel = new();
             try
             {
                 string userID = UserUtility.GetUserID(User);
                 List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
                 List<TransactionSource> transactionSources = await _db.GetTransactionSources(userID);
                 List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
-                TempData["TransactionCategories"] = transactionCategories;
-                TempData["TransactionSources"] = transactionSources;
-                TempData["TransactionTypes"] = transactionTypes;
+                List<SavingsGoal> savingsGoals = await _db.GetSavingsGoals(budgetID);
+                if (transactionTypes.Count == 2)
+                {
+                    transactionTypes.Add(new TransactionType()
+                    {
+                        ID = transactionTypes.Where(type => type.Name == TransactionUtility.TRANSACTION_TYPE_EXPENSE).First().ID,
+                        Name = TransactionUtility.TRANSACTION_TYPE_SAVINGS_ADD
+                    });
+                    transactionTypes.Add(new TransactionType()
+                    {
+                        ID = transactionTypes.Where(type => type.Name == TransactionUtility.TRANSACTION_TYPE_INCOME).First().ID,
+                        Name = TransactionUtility.TRANSACTION_TYPE_SAVINGS_WITHDRAW
+                    });
+                }
+
+
                 newTransaction.BudgetID = budgetID;
                 newTransaction.TransactionDate = DateTime.Now.ToLocalTime();
                 if (transactionTypes.Any(type => type.Name.Equals(TransactionUtility.TRANSACTION_TYPE_EXPENSE)))
                 {
                     newTransaction.TransactionTypeID = transactionTypes.FirstOrDefault(type => type.Name.Equals(TransactionUtility.TRANSACTION_TYPE_EXPENSE)).ID;
                 }
+
+                newTransactionViewModel = new NewTransactionViewModel
+                {
+                    TransactionCategories = transactionCategories,
+                    TransactionSources = transactionSources,
+                    TransactionTypes = transactionTypes,
+                    SavingsGoals = savingsGoals,
+                    NewTransaction = newTransaction
+                };
             }
             catch (Exception ex)
             {
                 SentrySdk.CaptureException(ex);
             }
-            
-            return View("NewTransaction",newTransaction);
+
+
+
+            return View("NewTransaction", newTransactionViewModel);
         }
 
         public async Task<IActionResult> EditTransaction(Guid transactionID)
@@ -97,10 +123,22 @@ namespace TropicalBudget.Controllers
                 List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
                 List<TransactionSource> transactionSources = await _db.GetTransactionSources(userID);
                 List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
+
                 TempData["TransactionCategories"] = transactionCategories;
                 TempData["TransactionSources"] = transactionSources;
                 TempData["TransactionTypes"] = transactionTypes;
                 editingTransaction = await _db.GetTransaction(transactionID);
+                List<SavingsGoal> savingsGoals = await _db.GetSavingsGoals(editingTransaction.BudgetID);
+                TempData["SavingsGoals"] = savingsGoals;
+
+                if (editingTransaction.TransactionTypeID == transactionTypes.Where(type => type.Name == TransactionUtility.TRANSACTION_TYPE_INCOME).First().ID)
+                {
+                    editingTransaction.UiTransactionType = editingTransaction.IsSavings ? "withdraw_savings" : "income";
+                }
+                if (editingTransaction.TransactionTypeID == transactionTypes.Where(type => type.Name == TransactionUtility.TRANSACTION_TYPE_EXPENSE).First().ID)
+                {
+                    editingTransaction.UiTransactionType = editingTransaction.IsSavings ? "add_savings" : "expense";
+                }
             }
             catch (Exception ex)
             {
@@ -109,23 +147,55 @@ namespace TropicalBudget.Controllers
             return View(editingTransaction);
         }
 
+        private async Task<Transaction> ManageTransactionTypeDetails(Transaction transaction)
+        {
+
+            if (transaction.UiTransactionType != null)
+            {
+                List<TransactionType> transactionTypes = await _db.GetTransactionTypes();
+
+                //set transaction type id
+                if (transaction.UiTransactionType == "income" || transaction.UiTransactionType == "withdraw_savings")
+                {
+                    transaction.TransactionTypeID = transactionTypes.Where(type => type.Name == TransactionUtility.TRANSACTION_TYPE_INCOME).FirstOrDefault().ID;
+                }
+                else
+                {
+                    transaction.TransactionTypeID = transactionTypes.Where(type => type.Name == TransactionUtility.TRANSACTION_TYPE_EXPENSE).FirstOrDefault().ID;
+                }
+                //check if it is a savings transaction and set savings goal id to null
+                if (transaction.UiTransactionType == "income" || transaction.UiTransactionType == "expense")
+                {
+                    transaction.SavingsGoalID = Guid.Empty;
+                }
+                else
+                {
+                    transaction.CategoryID = Guid.Empty;
+                }
+            }
+            return transaction;
+        }
+
 
         public async Task<IActionResult> AddNewTransaction(Transaction newTransaction)
         {
             try
             {
+                newTransaction = await ManageTransactionTypeDetails(newTransaction);
                 await _db.InsertTransaction(newTransaction);
             }
             catch (Exception ex)
             {
                 SentrySdk.CaptureException(ex);
             }
-            return RedirectToAction("Index",new {budgetID = newTransaction.BudgetID});
+            return RedirectToAction("Index", new { budgetID = newTransaction.BudgetID });
         }
         public async Task<IActionResult> EditExistingTransaction(Transaction newTransaction)
         {
             try
             {
+                newTransaction = await ManageTransactionTypeDetails(newTransaction);
+
                 await _db.UpdateTransaction(newTransaction);
             }
             catch (Exception ex)
@@ -160,7 +230,7 @@ namespace TropicalBudget.Controllers
                 List<Transaction> transactions = await _db.GetTransactions(budgetID, startDate, endDate);
                 transactions = transactions.OrderByDescending(x => x.CreatedAt).ToList();
                 List<TransactionExport> transactionExports = await TransactionUtility.ConvertTransactionsToExportTransactions(transactions);
-                using (StreamWriter writer = new(stream, leaveOpen:true))
+                using (StreamWriter writer = new(stream, leaveOpen: true))
                 {
                     CsvWriter csv = new(writer, new CultureInfo("en-US"));
                     csv.WriteRecords(transactionExports);

@@ -18,9 +18,10 @@
         {"month", Model.startDate.Month.ToString()},
     };
 
-    List<IGrouping<Guid, Transaction>> categoryGroupedExpenses = Model.Transactions.Where(transaction =>
-transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).GroupBy(transaction =>
-transaction.CategoryID).ToList();
+    @* List<IGrouping<Guid, Transaction>> categoryGroupedExpenses = Model.Transactions.Where(transaction =>
+transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE &&
+!transaction.IsSavings).GroupBy(transaction =>
+transaction.CategoryID).ToList(); *@
 
     decimal plannedExpenses = Model.PlanItems.Where(item => item.TransactionType ==
 TransactionUtility.TRANSACTION_TYPE_EXPENSE).Sum(item => item.Amount);
@@ -60,6 +61,11 @@ TransactionUtility.TRANSACTION_TYPE_EXPENSE).Sum(item => item.Amount);
             <i class="bi bi-plus-circle"></i>
         </a>
         <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-primary border border-primary"
+               asp-controller="Plan" asp-action="NewGoal" asp-all-route-data="fullTransactionRouteData">
+            <span>Plan For Goal</span>
+            <i class="bi bi-plus-circle"></i>
+        </a>
+        <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-primary border border-primary"
                asp-controller="Plan" asp-action="Index" asp-all-route-data="newTransactionRouteData">
             <span>Today</span>
             <i class="bi bi-calendar-check"></i>
@@ -70,6 +76,13 @@ TransactionUtility.TRANSACTION_TYPE_EXPENSE).Sum(item => item.Amount);
                style="cursor:pointer">
             <span>Transactions</span>
             <i class="bi bi-card-list"></i>
+        </a>
+        <a id="savingsGoalsButton"
+               class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+               asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+               style="cursor:pointer">
+            <span>Savings Goals</span>
+            <i class="bi bi-piggy-bank"></i>
         </a>
         <a id="spendingListButton"
                class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
@@ -86,14 +99,18 @@ TransactionUtility.TRANSACTION_TYPE_EXPENSE).Sum(item => item.Amount);
             foreach (PlanItem planItem in Model.PlanItems)
             {
                 <div role="button" class="d-flex flex-column gap-1 bg-light rounded px-4 py-2"
-                     onclick="editTransaction('@(planItem.ID)')">
+                     onclick="editTransaction('@(planItem.ID)', '@planItem.IsSavings')">
                     <div class="d-flex gap-2 justify-content-between align-items-center">
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             <span class="rounded-circle"
-                                  style="width:20px; height:20px; background-color: @planItem.CategoryColor; display:block"></span>
-                            <div>
-                                <span>@(planItem.CategoryName)</span>
-                                @*                             @if(planItem.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE){
+                                  style="width:20px; height:20px; background-color: @(planItem.IsSavings ? planItem.SavingsGoalColor :planItem.CategoryColor); display:block"></span>
+                            <div class="d-flex flex-column flex-md-row align-items-md-center gap-md-2">
+                                <span>@(planItem.IsSavings ? planItem.SavingsGoalTitle : planItem.CategoryName)</span>
+                                @if (planItem.IsSavings)
+                                {
+                                    <span style="color: gray; font-size:small;">(savings goal)</span>
+                                }
+                                @* @if(planItem.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE){
                                 <span>@(Math.Round((planItem.Amount/plannedExpenses) * 100))%</span>
                             } *@
                             </div>
@@ -102,10 +119,26 @@ TransactionUtility.TRANSACTION_TYPE_EXPENSE).Sum(item => item.Amount);
                             <span class="fw-normal fs-6">
                                 @{
                                     decimal transactionSum = 0;
-                                    if (Model.Transactions.Any(x => x.CategoryID == planItem.CategoryID))
+                                    @* multiplyer for expense transactions - should be 1 when the planned item is an expense and -1 when
+                    it is income *@
+                                    int expenseMultiplyer = planItem.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE ||
+                    planItem.TransactionType == TransactionUtility.TRANSACTION_TYPE_SAVINGS_ADD ? 1 : -1;
+                                    //income multiplyer is opposite
+                                    int incomeMultiplyer = expenseMultiplyer * -1;
+                                    if (planItem.IsSavings)
+                                    {
+                                        if (Model.Transactions.Any(x => x.SavingsGoalID == planItem.SavingsGoalID))
+                                        {
+                                            transactionSum = Model.Transactions.Where(x => x.SavingsGoalID == planItem.SavingsGoalID).Sum(x =>
+                        x.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE ?
+        x.Amount * expenseMultiplyer : x.Amount * incomeMultiplyer);
+                                        }
+                                    }
+                                    else if (Model.Transactions.Any(x => x.CategoryID == planItem.CategoryID))
                                     {
                                         transactionSum = Model.Transactions.Where(x => x.CategoryID == planItem.CategoryID).Sum(x =>
-                        x.Amount);
+                        x.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE ?
+        x.Amount * expenseMultiplyer : x.Amount * incomeMultiplyer);
                                         // transactionSum = transactionsForCategory.Sum();
 
                                     }
@@ -118,9 +151,10 @@ TransactionUtility.TRANSACTION_TYPE_EXPENSE).Sum(item => item.Amount);
                     </div>
                     <div class="progress">
                         <div class="progress-bar" role="progressbar"
-                             style="width: @(transactionPercentage)%; background-color: @(planItem.CategoryColor);"
+                             style="width: @(transactionPercentage)%; background-color: @(planItem.IsSavings ? planItem.SavingsGoalColor :planItem.CategoryColor);"
                              aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
+                    
                 </div>
             }
         }
@@ -133,7 +167,14 @@ TransactionUtility.TRANSACTION_TYPE_EXPENSE).Sum(item => item.Amount);
         const previousMonth = () => {
             location.href = "@Url.Action("Index", "Plan")" + `?budgetID=${"@(Model.Budget.ID.ToString())"}&year=${@(previousYear)}&month=${@(previousMonth)}`;
         }
-        const editTransaction = (plan_id) => {
-            location.href = "@Url.Action("Edit", "Plan")" + `?budgetID=${"@(Model.Budget.ID.ToString())"}&year=${@(Model.startDate.Year)}&month=${@(Model.startDate.Month)}&planID=${plan_id}`;
+        const editTransaction = (plan_id, is_savings) => {
+            console.log(is_savings == 'True')
+            if (is_savings == 'True') {
+
+                location.href = "@Url.Action("EditGoal", "Plan")" + `?budgetID=${"@(Model.Budget.ID.ToString())"}&year=${@(Model.startDate.Year)}&month=${@(Model.startDate.Month)}&planID=${plan_id}`;
+            }
+            else {
+                location.href = "@Url.Action("Edit", "Plan")" + `?budgetID=${"@(Model.Budget.ID.ToString())"}&year=${@(Model.startDate.Year)}&month=${@(Model.startDate.Month)}&planID=${plan_id}`;
+            }
         }
     </script>
