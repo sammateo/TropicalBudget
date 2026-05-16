@@ -52,7 +52,7 @@ namespace TropicalBudget.Controllers
                 Budget budget = await _db.GetBudget(userID, budgetID);
                 TempData["BudgetName"] = budget != null && !string.IsNullOrWhiteSpace(budget.Name) ? budget.Name : "Unknown";
                 List<SavingsGoal> savingsGoals = await _db.GetSavingsGoals(budgetID);
-                List<Transaction> transactions = await _db.GetTransactions(budgetID);
+                List<Transaction> transactions = await _db.GetSavingsGoalsTransactions(budgetID);
                 viewSavingsGoalsViewModel = new()
                 {
                     Budget = budget ?? new(),
@@ -116,6 +116,7 @@ namespace TropicalBudget.Controllers
                 endDate = startDate.AddMonths(1).AddSeconds(-1);
                 currentMonth = $"{startDate.ToString("MMMM")}, {startDate.ToString("yyyy")}";
             }
+            EditSavingsGoalViewModal editSavingsGoalViewModal = new();
             SavingsGoal editPlanItem = new();
             try
             {
@@ -123,14 +124,18 @@ namespace TropicalBudget.Controllers
                 editPlanItem = await _db.GetSavingsGoal(savingsGoalID, userID);
                 editPlanItem.Year = startDate.Year;
                 editPlanItem.Month = startDate.Month;
-                List<Transaction> transactions = await _db.GetTransactions(budgetID);
+                List<Transaction> transactions = await _db.GetSavingsGoalTransactions(budgetID, savingsGoalID);
+
+
+                editSavingsGoalViewModal.SavingsGoal = editPlanItem;
+                editSavingsGoalViewModal.Transactions = transactions;
 
             }
             catch (Exception ex)
             {
                 SentrySdk.CaptureException(ex);
             }
-            return View("EditSavingsGoal", editPlanItem);
+            return View("EditSavingsGoal", editSavingsGoalViewModal);
         }
 
 

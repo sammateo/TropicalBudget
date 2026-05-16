@@ -1,7 +1,14 @@
-﻿@using TropicalBudget.Utilities
-@model SavingsGoal
+﻿@using TropicalBudget.Models.ViewModels
+@using TropicalBudget.Utilities
+@model EditSavingsGoalViewModal
 @{
     ViewData["Title"] = "Edit Savings Goal";
+    List<IGrouping<DateOnly, Transaction>> groupedTransactions = Model.Transactions.GroupBy(transaction =>
+DateOnly.FromDateTime(transaction.TransactionDate)).ToList();
+
+    if (groupedTransactions != null)
+            groupedTransactions = groupedTransactions.OrderByDescending(group => group.Key).ToList();
+
 }
 
 <div class="text-center">
@@ -12,20 +19,20 @@
             @Html.AntiForgeryToken()
             ;
             <div class="d-flex flex-column gap-2">
-                @Html.HiddenFor(x => x.ID)
-                @Html.HiddenFor(x => x.BudgetID)
-                @Html.HiddenFor(x => x.Year)
-                @Html.HiddenFor(x => x.Month)
-                @Html.LabelFor(x => x.Title)
-                @Html.TextBoxFor(x => x.Title)
-                @Html.LabelFor(x => x.Color)
-                @Html.TextBoxFor(x => x.Color, new { @type = "color", @class = "bg-light rounded border border-grey", @style = "width:100%" })
-                @Html.LabelFor(x => x.GoalAmount)
+                @Html.HiddenFor(x => x.SavingsGoal.ID)
+                @Html.HiddenFor(x => x.SavingsGoal.BudgetID)
+                @Html.HiddenFor(x => x.SavingsGoal.Year)
+                @Html.HiddenFor(x => x.SavingsGoal.Month)
+                @Html.LabelFor(x => x.SavingsGoal.Title)
+                @Html.TextBoxFor(x => x.SavingsGoal.Title)
+                @Html.LabelFor(x => x.SavingsGoal.Color)
+                @Html.TextBoxFor(x => x.SavingsGoal.Color, new { @type = "color", @class = "bg-light rounded border border-grey", @style = "width:100%" })
+                @Html.LabelFor(x => x.SavingsGoal.GoalAmount)
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
                         <span class="input-group-text">$</span>
                     </div>
-                    @Html.TextBoxFor(x => x.GoalAmount, new { @placeholder = "Amount", @type = "number", @min = 0, @class = "form-control", @step = "0.01", @required = true })
+                    @Html.TextBoxFor(x => x.SavingsGoal.GoalAmount, new { @placeholder = "Amount", @type = "number", @min = 0, @class = "form-control", @step = "0.01", @required = true })
                 </div>
                 <input type="submit" name="SaveButton" class="btn btn-primary" value="Save" />
                 <input type="button" name="ExitButton" onclick="navigateToHome()" class="btn btn-outline-primary" value="Exit" />
@@ -36,14 +43,67 @@
     </div>
 </div>
 
+@if (groupedTransactions != null && groupedTransactions.Count > 0)
+        {
+            foreach (IGrouping<DateOnly, Transaction> groupedTransaction in groupedTransactions)
+            {
+                <div>
+                    @{
+                        decimal dailyTotal = TransactionUtility.GetExpenses(groupedTransaction.ToList()) -
+                        TransactionUtility.GetIncome(groupedTransaction.ToList());
+                        string dailyTotalPrefix = string.Empty;
+                        if (dailyTotal > 0)
+                            dailyTotalPrefix = "+";
+
+                    }
+                    <div class="d-flex justify-content-between align-items-center my-2">
+                        @if (groupedTransaction.Key == DateOnly.FromDateTime(DateTime.Today))
+                        {
+                            <h2>Today</h2>
+                        }
+                        else if (groupedTransaction.Key == DateOnly.FromDateTime(DateTime.Today.AddDays(+1)))
+                        {
+                            <h2>Tomorrow</h2>
+                        }
+                        else if (groupedTransaction.Key == DateOnly.FromDateTime(DateTime.Today.AddDays(-1)))
+                        {
+                            <h2>Yesterday</h2>
+                        }
+                        else
+                        {
+                            <h2>@groupedTransaction.Key.ToString("ddd, MMM dd")</h2>
+                        }
+                        <span>@($"{dailyTotalPrefix}{dailyTotal:c}")</span>
+                    </div>
+                    <div class="d-flex flex-column gap-2">
+                        @if (groupedTransaction != null && groupedTransaction.ToList().Count > 0)
+                        {
+                            foreach (Transaction transaction in groupedTransaction.OrderByDescending(x => x.CreatedAt).ToList())
+                            {
+                                <div class="d-flex flex-column gap-2 mb-2" style="border-left: 2px solid @transaction.CategoryColor">
+                                    <div class="d-flex align-items-center justify-content-between bg-light py-2 px-2 rounded">
+                                        <div class="d-flex flex-column">
+                                            <span class="fs-4 fw-normal">@(transaction.Note ?? "")</span>
+                                            <span class="@(!string.IsNullOrWhiteSpace(transaction.Note) ? "fs-6 fw-light":"fs-4 fw-normal")">@transaction.SavingsGoalTitle</span>
+                                        </div>
+                                        <span class="fw-bold fs-5 @(transaction.TransactionType == "Expense" ? "text-success":"")">@(transaction.TransactionType == "Income" ? "-":"")@($"{transaction.Amount:c}")</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+        }
+
 <script>
     const navigateToHome = () =>{
-        location.href = "@Url.Action("Index", "SavingsGoals")" +"?budgetID=@(Model.BudgetID.ToString())&year=@(Model.Year)&month=@(Model.Month)";
+        location.href = "@Url.Action("Index", "SavingsGoals")" +"?budgetID=@(Model.SavingsGoal.BudgetID.ToString())&year=@(Model.SavingsGoal.Year)&month=@(Model.SavingsGoal.Month)";
     }
 
     const deleteSavingsGoal = () => {
         if(confirm("Are you sure you want to delete this savings goal?") == true){
-            location.href = "@Url.Action("DeleteSavingsGoal", "SavingsGoals")" +`?budgetID=${"@(Model.BudgetID.ToString())"}` + "&savingsGoalID=@(Model.ID)&year=@(Model.Year)&month=@(Model.Month)";
+            location.href = "@Url.Action("DeleteSavingsGoal", "SavingsGoals")" +`?budgetID=${"@(Model.SavingsGoal.BudgetID.ToString())"}` + "&savingsGoalID=@(Model.SavingsGoal.ID)&year=@(Model.SavingsGoal.Year)&month=@(Model.SavingsGoal.Month)";
         }
     }
     

@@ -161,6 +161,44 @@ namespace TropicalBudget.Services
             return users;
         }
 
+        public async Task<List<Transaction>> GetSavingsGoalsTransactions(Guid budgetID)
+        {
+            var users = new List<Transaction>();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, tc.color AS categorycolor, ts.name AS sourcename, tt.name AS transactiontype,
+                    transaction_date::timestamp as transactiondate, category_id AS categoryid, t.created_at AS CreatedAt,
+                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp,
+                    t.savings_goal_id as SavingsGoalID, t.is_savings as IsSavings, sg.title as SavingsGoalTitle, sg.color as SavingsGoalColor
+                    FROM transactions t
+                    LEFT JOIN transaction_category tc ON t.category_id = tc.id
+                    LEFT JOIN transaction_source ts ON t.source_id = ts.id
+                    LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
+                    LEFT JOIN savings_goals sg ON t.savings_goal_id = sg.id
+                    WHERE t.budget_id = @budgetID AND t.is_savings IS TRUE";
+            users = (await conn.QueryAsync<Transaction>(query, new { budgetID })).ToList();
+            return users;
+        }
+
+        public async Task<List<Transaction>> GetSavingsGoalTransactions(Guid budgetID, Guid savingsGoalID)
+        {
+            var users = new List<Transaction>();
+
+            using var conn = new NpgsqlConnection(_connectionString);
+            string query = @"SELECT t.id,amount, note, tc.name AS categoryname, tc.color AS categorycolor, ts.name AS sourcename, tt.name AS transactiontype,
+                    transaction_date::timestamp as transactiondate, category_id AS categoryid, t.created_at AS CreatedAt,
+                    source_id as sourceid, tt.id AS transactiontypeid, t.created_at AS createdtimestamp, t.updated_at AS updatedtimestamp,
+                    t.savings_goal_id as SavingsGoalID, t.is_savings as IsSavings, sg.title as SavingsGoalTitle, sg.color as SavingsGoalColor
+                    FROM transactions t
+                    LEFT JOIN transaction_category tc ON t.category_id = tc.id
+                    LEFT JOIN transaction_source ts ON t.source_id = ts.id
+                    LEFT JOIN transaction_type tt ON t.transaction_type_id = tt.id
+                    LEFT JOIN savings_goals sg ON t.savings_goal_id = sg.id
+                    WHERE t.budget_id = @budgetID AND t.is_savings IS TRUE AND t.savings_goal_id = @savingsGoalID";
+            users = (await conn.QueryAsync<Transaction>(query, new { budgetID, savingsGoalID })).ToList();
+            return users;
+        }
+
         public async Task<Transaction> GetTransaction(Guid transaction_id)
         {
             var users = new Transaction();
