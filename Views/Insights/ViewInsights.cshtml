@@ -283,7 +283,7 @@ DateOnly.FromDateTime(transaction.TransactionDate)).OrderBy(x => x.Key).ToList()
         <div
             class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
             <h3 class="text-center">Saved this month</h3>
-            <div onclick="downloadspentThisMonthChart()"
+            <div onclick="downloadsavedThisMonthChart()"
                  class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
                  style="cursor:pointer">
                 <span>Export</span>
@@ -294,22 +294,6 @@ DateOnly.FromDateTime(transaction.TransactionDate)).OrderBy(x => x.Key).ToList()
             <canvas class="" id="savingsContributionsByDateLineChart"></canvas>
         </div>
     </div>
-    @* <div>
-        <div class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2
-px-2">
-            <h3 class="text-center">AI Insights</h3>
-            <div onclick="downloadspentThisMonthChart()" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2
-btn-outline-secondary border border-secondary" style="cursor:pointer">
-                <span>Export</span>
-                <i class="bi bi-box-arrow-down"></i>
-            </div>
-        </div>
-        <div style="max-width:90vw;" class="d-flex flex-col mx-auto my-4 justify-content-center">
-            <pre>
-                @AIInsights
-            </pre>
-        </div>
-    </div> *@
 }
 else
 {
@@ -363,6 +347,15 @@ else
         var a = document.createElement('a');
         a.href = transactionsByDateLineChart.toBase64Image();
         a.download = 'Spent This Month.png';
+        // Trigger the download
+        if (confirm('Do you want to download this chart?')) {
+            a.click();
+        }
+    }
+    const downloadsavedThisMonthChart = () => {
+        var a = document.createElement('a');
+        a.href = savingsContributionsByDateLineChart.toBase64Image();
+        a.download = 'Saved This Month.png';
         // Trigger the download
         if (confirm('Do you want to download this chart?')) {
             a.click();
