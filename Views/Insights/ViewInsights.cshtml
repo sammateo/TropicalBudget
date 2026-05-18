@@ -6,7 +6,8 @@
     List<Transaction> transactions = Model.Item2;
     Guid budgetID = Model.Item1;
 
-    string currentMonthString = TempData.ContainsKey("currentMonthString") ? (string)TempData["currentMonthString"] : string.Empty;
+    string currentMonthString = TempData.ContainsKey("currentMonthString") ? (string)TempData["currentMonthString"] :
+string.Empty;
     DateTime startDate = (DateTime)TempData["startDate"];
     string budgetName = TempData["BudgetName"].ToString();
     @* string AIInsights = TempData["AIInsights"].ToString(); *@
@@ -26,11 +27,24 @@
         {"month", startDate.Month.ToString()},
     };
 
-    List<IGrouping<Guid, Transaction>> categoryGroupedExpenses = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE && transaction.CategoryID != Guid.Empty).GroupBy(transaction => transaction.CategoryID).ToList();
-    List<IGrouping<Guid, Transaction>> categoryGroupedIncome = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_INCOME && transaction.CategoryID != Guid.Empty).GroupBy(transaction => transaction.CategoryID).ToList();
+    List<IGrouping<Guid, Transaction>> categoryGroupedExpenses = transactions.Where(transaction =>
+transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE && transaction.CategoryID !=
+Guid.Empty).GroupBy(transaction => transaction.CategoryID).ToList();
+    List<IGrouping<Guid, Transaction>> categoryGroupedIncome = transactions.Where(transaction => transaction.TransactionType
+== TransactionUtility.TRANSACTION_TYPE_INCOME && transaction.CategoryID != Guid.Empty).GroupBy(transaction =>
+transaction.CategoryID).ToList();
 
-    List<Transaction> incomeTransactions = transactions.Where(x => x.TransactionType == TransactionUtility.TRANSACTION_TYPE_INCOME).ToList();
-    List<Transaction> expenseTransactions = transactions.Where(x => x.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).ToList();
+    List<IGrouping<Guid, Transaction>> categoryGroupedAddToSavings = transactions.Where(transaction =>
+    transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE && transaction.SavingsGoalID !=
+    Guid.Empty).GroupBy(transaction => transaction.SavingsGoalID).ToList();
+    List<IGrouping<Guid, Transaction>> categoryGroupedWithdrawFromSavings = transactions.Where(transaction =>
+transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_INCOME && transaction.SavingsGoalID !=
+Guid.Empty).GroupBy(transaction => transaction.SavingsGoalID).ToList();
+
+    List<Transaction> incomeTransactions = transactions.Where(x => x.TransactionType ==
+TransactionUtility.TRANSACTION_TYPE_INCOME).ToList();
+    List<Transaction> expenseTransactions = transactions.Where(x => x.TransactionType ==
+TransactionUtility.TRANSACTION_TYPE_EXPENSE).ToList();
     decimal incomeAmount = incomeTransactions.Sum(x => x.Amount);
     decimal expenseAmount = expenseTransactions.Sum(x => x.Amount);
     decimal balance = incomeAmount - expenseAmount;
@@ -59,8 +73,36 @@
         });
     }
 
+    //savings by category
+    List<Transaction> addToSavingsByCategory = new();
+    List<Transaction> withdrawFromSavingsByCategory = new();
+    foreach (IGrouping<Guid, Transaction> categoryGroupedTransaction in categoryGroupedAddToSavings)
+    {
+        addToSavingsByCategory.Add(new()
+        {
+            SavingsGoalID = categoryGroupedTransaction.Key,
+            Amount = categoryGroupedTransaction.Sum(tran => tran.Amount),
+            SavingsGoalTitle = categoryGroupedTransaction.First().SavingsGoalTitle,
+            SavingsGoalColor = categoryGroupedTransaction.First().SavingsGoalColor
+        });
+    }
+    foreach (IGrouping<Guid, Transaction> categoryGroupedTransaction in categoryGroupedWithdrawFromSavings)
+    {
+        withdrawFromSavingsByCategory.Add(new()
+        {
+            SavingsGoalID = categoryGroupedTransaction.Key,
+            Amount = categoryGroupedTransaction.Sum(tran => tran.Amount),
+            SavingsGoalTitle = categoryGroupedTransaction.First().SavingsGoalTitle,
+            SavingsGoalColor = categoryGroupedTransaction.First().SavingsGoalColor
+        });
+    }
+
+
     //transactions grouped by date
-    List<IGrouping<DateOnly, Transaction>> dateGroupedTransactions = transactions.Where(transaction => transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE).GroupBy(transaction => DateOnly.FromDateTime(transaction.TransactionDate)).OrderBy(x => x.Key).ToList();
+    List<IGrouping<DateOnly, Transaction>> dateGroupedTransactions = transactions.Where(transaction =>
+transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE && transaction.CategoryID !=
+Guid.Empty).GroupBy(transaction =>
+DateOnly.FromDateTime(transaction.TransactionDate)).OrderBy(x => x.Key).ToList();
     List<Transaction> transactionsByDate = new();
     foreach (IGrouping<DateOnly, Transaction> dateGroupedTransaction in dateGroupedTransactions)
     {
@@ -71,12 +113,31 @@
         });
     }
 
+    //savings contributions grouped by date
+    List<IGrouping<DateOnly, Transaction>> dateGroupedSavingsContributions = transactions.Where(transaction =>
+transaction.TransactionType == TransactionUtility.TRANSACTION_TYPE_EXPENSE && transaction.SavingsGoalID !=
+Guid.Empty).GroupBy(transaction =>
+DateOnly.FromDateTime(transaction.TransactionDate)).OrderBy(x => x.Key).ToList();
+    List<Transaction> savingsContributionsByDate = new();
+    foreach (IGrouping<DateOnly, Transaction> dateGroupedTransaction in dateGroupedSavingsContributions)
+    {
+        savingsContributionsByDate.Add(new()
+        {
+            TransactionDate = dateGroupedTransaction.First().TransactionDate,
+            Amount = dateGroupedTransaction.Sum(tran => tran.Amount),
+        });
+        Console.WriteLine(savingsContributionsByDate.Last().TransactionDate);
+        Console.WriteLine(savingsContributionsByDate.Last().Amount);
+    }
+
+
 }
 
 <div class="text-center">
     <h2 class="fs-1">Insights: @budgetName</h2>
     <div class="d-flex justify-content-between align-items-center gap-2 p-1 my-2 rounded-pill">
-        <div onclick="previousMonth()" style="cursor:pointer" class="btn-outline-primary border border-primary d-flex align-items-center py-1 px-4 rounded-pill">
+        <div onclick="previousMonth()" style="cursor:pointer"
+             class="btn-outline-primary border border-primary d-flex align-items-center py-1 px-4 rounded-pill">
             <i class="bi bi-chevron-left fs-4" style="cursor:pointer"></i>
             <span class="d-none d-sm-block">@(startDate.AddMonths(-1).ToString("MMMM, yyyy"))</span>
         </div>
@@ -84,7 +145,8 @@
             <p class="fs-5 fw-bold m-0">@currentMonthString</p>
             <p class="fs-6 fw-normal m-0 text-uppercase">@(transactions.Count) transactions</p>
         </div>
-        <div onclick="nextMonth()" style="cursor:pointer" class="bg-primary d-flex align-items-center text-white py-1 px-4 rounded-pill">
+        <div onclick="nextMonth()" style="cursor:pointer"
+             class="bg-primary d-flex align-items-center text-white py-1 px-4 rounded-pill">
             <span class="d-none d-sm-block">@(startDate.AddMonths(1).ToString("MMMM, yyyy"))</span>
             <i class="bi bi-chevron-right fs-4"></i>
         </div>
@@ -94,44 +156,55 @@
 
 @* Button row *@
 <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 my-3">
-    <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-primary border border-primary" asp-controller="Insights" asp-action="Index" asp-all-route-data="newTransactionRouteData">
+    <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-primary border border-primary"
+       asp-controller="Insights" asp-action="Index" asp-all-route-data="newTransactionRouteData">
         <span>Today</span>
         <i class="bi bi-calendar-check"></i>
     </a>
-    <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-success border border-success" asp-controller="Insights" asp-action="AI" asp-all-route-data="fullTransactionRouteData">
+    <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-success border border-success"
+       asp-controller="Insights" asp-action="AI" asp-all-route-data="fullTransactionRouteData">
         <span>AI Insights</span>
         <i class="bi bi-stars"></i>
     </a>
-    <a id="spendingListButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" asp-controller="Transaction" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
+    <a id="spendingListButton"
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+       asp-controller="Transaction" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+       style="cursor:pointer">
         <span>Transactions</span>
         <i class="bi bi-card-list"></i>
     </a>
-    <a id="planBudgetButton" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success" asp-controller="Plan" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
+    <a id="planBudgetButton"
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+       asp-controller="Plan" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
         <span>Plan</span>
         <i class="bi bi-card-checklist"></i>
     </a>
     <a id="savingsGoalsButton"
-           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
-           asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
-           style="cursor:pointer">
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+       asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+       style="cursor:pointer">
         <span>Savings Goals</span>
         <i class="bi bi-piggy-bank"></i>
     </a>
 </div>
 
-@if(transactions != null && transactions.Count > 0){
+@if (transactions != null && transactions.Count > 0)
+{
     <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
         <canvas class="" id="incomeExpenseBarChart"></canvas>
     </div>
 
     <div class="d-xl-flex gap-4 justify-content-center">
         <div id="spendingChartsContainer">
-            <div class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+            <div
+                class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
                 <h3 class="text-center">Expenses</h3>
-                    <div onclick="downloadExpenseCategoryChart()" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" style="cursor:pointer">
-                        <span>Export</span>
-                         <i class="bi bi-box-arrow-down"></i>
-                    </div>
+                <div onclick="downloadExpenseCategoryChart()"
+                     class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+                     style="cursor:pointer">
+                    <span>Export</span>
+                    <i class="bi bi-box-arrow-down"></i>
+                </div>
             </div>
             <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
                 <canvas class="" id="donutTransactionCategoriesChart"></canvas>
@@ -139,22 +212,67 @@
         </div>
 
         <div id="incomeChartsContainer">
-            <div class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+            <div
+                class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
                 <h3 class="text-center">Income</h3>
-                        <div onclick="downloadIncomeCategoryChart()" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" style="cursor:pointer">
-                        <span>Export</span>
-                         <i class="bi bi-box-arrow-down"></i>
-                    </div>
+                <div onclick="downloadIncomeCategoryChart()"
+                     class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+                     style="cursor:pointer">
+                    <span>Export</span>
+                    <i class="bi bi-box-arrow-down"></i>
+                </div>
             </div>
             <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
                 <canvas class="" id="donutIncomeCategoriesChart"></canvas>
             </div>
         </div>
     </div>
+
+    <div class="d-xl-flex gap-4 justify-content-center">
+
+        
+        <div id="addToSavingsChartsContainer">
+            <div
+                class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+                <h3 class="text-center">Savings Contributions</h3>
+                <div onclick="downloadAddToSavingsCategoryChart()"
+                     class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+                     style="cursor:pointer">
+                    <span>Export</span>
+                    <i class="bi bi-box-arrow-down"></i>
+                </div>
+            </div>
+            <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+                <canvas class="" id="donutTransactionAddToSavingsChart"></canvas>
+            </div>
+        </div>
+
+        
+
+        <div id="withdrawFromSavingsChartsContainer">
+            <div
+                class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+                <h3 class="text-center">Savings Withdrawals</h3>
+                <div onclick="downloadWithdrawFromSavingsCategoryChart()"
+                     class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+                     style="cursor:pointer">
+                    <span>Export</span>
+                    <i class="bi bi-box-arrow-down"></i>
+                </div>
+            </div>
+            <div style="max-width:90vw; width:500px;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+                <canvas class="" id="donutTransactionWithdrawFromSavingsChart"></canvas>
+            </div>
+        </div>
+
+    </div>
     <div>
-        <div class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+        <div
+            class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
             <h3 class="text-center">Spent this month</h3>
-            <div onclick="downloadspentThisMonthChart()" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" style="cursor:pointer">
+            <div onclick="downloadspentThisMonthChart()"
+                 class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+                 style="cursor:pointer">
                 <span>Export</span>
                 <i class="bi bi-box-arrow-down"></i>
             </div>
@@ -163,10 +281,27 @@
             <canvas class="" id="transactionsByDateLineChart"></canvas>
         </div>
     </div>
-        @* <div>
-        <div class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+    <div>
+        <div
+            class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2 px-2">
+            <h3 class="text-center">Saved this month</h3>
+            <div onclick="downloadspentThisMonthChart()"
+                 class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+                 style="cursor:pointer">
+                <span>Export</span>
+                <i class="bi bi-box-arrow-down"></i>
+            </div>
+        </div>
+        <div style="max-width:90vw;" class="d-flex flex-col mx-auto my-4 justify-content-center">
+            <canvas class="" id="savingsContributionsByDateLineChart"></canvas>
+        </div>
+    </div>
+    @* <div>
+        <div class="d-flex flex-column flex-xl-row justify-content-center justify-content-xl-between align-items-center gap-2
+px-2">
             <h3 class="text-center">AI Insights</h3>
-            <div onclick="downloadspentThisMonthChart()" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary" style="cursor:pointer">
+            <div onclick="downloadspentThisMonthChart()" class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2
+btn-outline-secondary border border-secondary" style="cursor:pointer">
                 <span>Export</span>
                 <i class="bi bi-box-arrow-down"></i>
             </div>
@@ -177,11 +312,13 @@
             </pre>
         </div>
     </div> *@
-}else{
-        <div class="d-flex flex-column align-items-center justify-content-center my-5">
-            <h2 class="text-center">No Transactions</h2>
-                <i class="bi bi-file-earmark-excel" style="font-size:4rem;"></i>
-        </div>
+}
+else
+{
+    <div class="d-flex flex-column align-items-center justify-content-center my-5">
+        <h2 class="text-center">No Transactions</h2>
+        <i class="bi bi-file-earmark-excel" style="font-size:4rem;"></i>
+    </div>
 }
 
 
@@ -191,7 +328,7 @@
         a.href = incomeChart.toBase64Image();
         a.download = 'Income Category.png';
         // Trigger the download
-        if(confirm('Do you want to download this chart?')){
+        if (confirm('Do you want to download this chart?')) {
             a.click();
         }
     }
@@ -200,17 +337,36 @@
         a.href = expenseChart.toBase64Image();
         a.download = 'Expense Category.png';
         // Trigger the download
-        if(confirm('Do you want to download this chart?')){
+        if (confirm('Do you want to download this chart?')) {
             a.click();
         }
     }
-    
+
+    const downloadAddToSavingsCategoryChart = () => {
+        var a = document.createElement('a');
+        a.href = addToSavingsChart.toBase64Image();
+        a.download = 'Savings Contributions.png';
+        // Trigger the download
+        if (confirm('Do you want to download this chart?')) {
+            a.click();
+        }
+    }
+    const downloadWithdrawFromSavingsCategoryChart = () => {
+        var a = document.createElement('a');
+        a.href = withdrawFromSavingsChart.toBase64Image();
+        a.download = 'Savings Withdrawals.png';
+        // Trigger the download
+        if (confirm('Do you want to download this chart?')) {
+            a.click();
+        }
+    }
+
     const downloadspentThisMonthChart = () => {
         var a = document.createElement('a');
         a.href = transactionsByDateLineChart.toBase64Image();
         a.download = 'Spent This Month.png';
         // Trigger the download
-        if(confirm('Do you want to download this chart?')){
+        if (confirm('Do you want to download this chart?')) {
             a.click();
         }
     }
@@ -223,6 +379,11 @@
     let expensesCategories =  @Html.Raw(JsonConvert.SerializeObject(expensesByCategory));
     let incomeCategories =  @Html.Raw(JsonConvert.SerializeObject(incomeByCategory));
     let transactionsByDate =  @Html.Raw(JsonConvert.SerializeObject(transactionsByDate));
+    //savings
+    let addToSavingsCategories =  @Html.Raw(JsonConvert.SerializeObject(addToSavingsByCategory));
+    let withdrawFromSavingsCategories =  @Html.Raw(JsonConvert.SerializeObject(withdrawFromSavingsByCategory));
+    let savingsContributionsByDate =  @Html.Raw(JsonConvert.SerializeObject(savingsContributionsByDate));
+    console.log(savingsContributionsByDate)
     //expense categories
     var transactionCategoriesCtx = document.getElementById('donutTransactionCategoriesChart').getContext('2d');
     var expenseChart = new Chart(transactionCategoriesCtx, {
@@ -233,21 +394,21 @@
                 label: 'Expenses',
                 backgroundColor: expensesCategories.map(cat => cat.CategoryColor),
                 //borderColor: 'rgb(255, 99, 132)',
-                 data:expensesCategories.map(cat => cat.Amount)
+                data: expensesCategories.map(cat => cat.Amount)
             }]
         },
         options: {
             legend: {
                 display: expensesCategories?.length <= 10,
-                responsive:true,
-                position:'bottom',
-                labels:{
+                responsive: true,
+                position: 'bottom',
+                labels: {
                     usePointStyle: true,
                 }
             },
-            tooltips:{
+            tooltips: {
                 callbacks: {
-                    label: function(tooltipItem, data){
+                    label: function (tooltipItem, data) {
                         let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
                         amount = currencyFormatter.format(amount)
                         let label = data.labels[tooltipItem.index];
@@ -268,21 +429,21 @@
                 label: 'Income',
                 backgroundColor: incomeCategories.map(cat => cat.CategoryColor),
                 //borderColor: 'rgb(255, 99, 132)',
-                 data:incomeCategories.map(cat => cat.Amount)
+                data: incomeCategories.map(cat => cat.Amount)
             }]
         },
         options: {
             legend: {
                 display: incomeCategories?.length <= 10,
-                responsive:true,
-                position:'bottom',
-                labels:{
+                responsive: true,
+                position: 'bottom',
+                labels: {
                     usePointStyle: true,
                 }
             },
-            tooltips:{
+            tooltips: {
                 callbacks: {
-                    label: function(tooltipItem, data){
+                    label: function (tooltipItem, data) {
                         let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
                         amount = currencyFormatter.format(amount)
                         let label = data.labels[tooltipItem.index];
@@ -298,22 +459,22 @@
     var incomeExpenseBarChart = new Chart(incomeExpenseBarChartCtx, {
         type: 'bar',
         data: {
-            labels: ['Income','Expense','Balance'],
+            labels: ['Income', 'Expense', 'Balance'],
             datasets: [{
                 label: 'Income',
-                backgroundColor: ['#4BB543','#FF0000','#0d6efd'],
-                 data:[@incomeAmount, @expenseAmount, @balance]
+                backgroundColor: ['#4BB543', '#FF0000', '#0d6efd'],
+                data: [@incomeAmount, @expenseAmount, @balance]
             }]
         },
         options: {
             legend: {
-                display:false,
-                responsive:true,
-                position:'bottom'
+                display: false,
+                responsive: true,
+                position: 'bottom'
             },
-            tooltips:{
+            tooltips: {
                 callbacks: {
-                    label: function(tooltipItem, data){
+                    label: function (tooltipItem, data) {
                         let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
                         amount = currencyFormatter.format(amount)
                         let label = data.labels[tooltipItem.index];
@@ -321,41 +482,41 @@
                     }
                 }
             },
-            scales:{
-            y: {
-                beginAtZero: true,
-                min:0,
-            },
-        }
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    min: 0,
+                },
+            }
         },
-        
+
     });
-    
+
     //transactions by date line chart 
     var itransactionsByDateLineChartCtx = document.getElementById('transactionsByDateLineChart').getContext('2d');
     var transactionsByDateLineChart = new Chart(itransactionsByDateLineChartCtx, {
         type: 'line',
         data: {
-            labels: transactionsByDate.map(transaction => new Date(transaction.TransactionDate).toLocaleDateString('en-us',{ month:"short", day:"numeric"})),
+            labels: transactionsByDate.map(transaction => new Date(transaction.TransactionDate).toLocaleDateString('en-us', { month: "short", day: "numeric" })),
             datasets: [{
                 label: 'Income',
                 borderColor: 'rgb(75, 192, 192)',
                 backgroundColor: '#0d6efd',
-                 data:transactionsByDate.map(transaction => transaction.Amount),
-                 fill: false,
-                 pointRadius: 7, //make points larger (default is 1)
+                data: transactionsByDate.map(transaction => transaction.Amount),
+                fill: false,
+                pointRadius: 7, //make points larger (default is 1)
 
             }]
         },
         options: {
             legend: {
-                display:false,
-                responsive:true,
-                position:'bottom'
+                display: false,
+                responsive: true,
+                position: 'bottom'
             },
-            tooltips:{
+            tooltips: {
                 callbacks: {
-                    label: function(tooltipItem, data){
+                    label: function (tooltipItem, data) {
                         let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
                         amount = currencyFormatter.format(amount)
                         let label = data.labels[tooltipItem.index];
@@ -363,28 +524,148 @@
                     }
                 }
             },
-            scales:{
-            y: {
-                beginAtZero: true,
-                min:0,
-                ticks:{
-                    callback: function(value, index, ticks) {
-                        return '$' + value;
-                    }
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    min: 0,
+                    ticks: {
+                        callback: function (value, index, ticks) {
+                            return '$' + value;
+                        }
+                    },
                 },
-            },
-        }
+            }
         },
-        
+
     });
+
+
+    // add to savings chart
+    var addToSavingsCategoriesCtx = document.getElementById('donutTransactionAddToSavingsChart').getContext('2d');
+    var addToSavingsChart = new Chart(addToSavingsCategoriesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: addToSavingsCategories.map(cat => cat.SavingsGoalTitle),
+            datasets: [{
+                label: 'Expenses',
+                backgroundColor: addToSavingsCategories.map(cat => cat.SavingsGoalColor),
+                //borderColor: 'rgb(255, 99, 132)',
+                data: addToSavingsCategories.map(cat => cat.Amount)
+            }]
+        },
+        options: {
+            legend: {
+                display: addToSavingsCategories?.length <= 10,
+                responsive: true,
+                position: 'bottom',
+                labels: {
+                    usePointStyle: true,
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                        amount = currencyFormatter.format(amount)
+                        let label = data.labels[tooltipItem.index];
+                        return `${label}: ${amount}`;
+                    }
+                }
+            }
+        }
+    });
+
+    // withdraw from savings chart
+    var withdrawFromSavingsCategoriesCtx = document.getElementById('donutTransactionWithdrawFromSavingsChart').getContext('2d');
+    var withdrawFromSavingsChart = new Chart(withdrawFromSavingsCategoriesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: withdrawFromSavingsCategories.map(cat => cat.SavingsGoalTitle),
+            datasets: [{
+                label: 'Expenses',
+                backgroundColor: withdrawFromSavingsCategories.map(cat => cat.SavingsGoalColor),
+                //borderColor: 'rgb(255, 99, 132)',
+                data: withdrawFromSavingsCategories.map(cat => cat.Amount)
+            }]
+        },
+        options: {
+            legend: {
+                display: withdrawFromSavingsCategories?.length <= 10,
+                responsive: true,
+                position: 'bottom',
+                labels: {
+                    usePointStyle: true,
+                }
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                        amount = currencyFormatter.format(amount)
+                        let label = data.labels[tooltipItem.index];
+                        return `${label}: ${amount}`;
+                    }
+                }
+            }
+        }
+    });
+
+    //savings contributions by date line chart 
+    var isavingsContributionsByDateLineChartCtx = document.getElementById('savingsContributionsByDateLineChart').getContext('2d');
+    var savingsContributionsByDateLineChart = new Chart(isavingsContributionsByDateLineChartCtx, {
+        type: 'line',
+        data: {
+            labels: savingsContributionsByDate.map(transaction => new Date(transaction.TransactionDate).toLocaleDateString('en-us', { month: "short", day: "numeric" })),
+            datasets: [{
+                label: 'Income',
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: '#0d6efd',
+                data: savingsContributionsByDate.map(transaction => transaction.Amount),
+                fill: false,
+                pointRadius: 7, //make points larger (default is 1)
+
+            }]
+        },
+        options: {
+            legend: {
+                display: false,
+                responsive: true,
+                position: 'bottom'
+            },
+            tooltips: {
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        let amount = data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index];
+                        amount = currencyFormatter.format(amount)
+                        let label = data.labels[tooltipItem.index];
+                        return `${label}: ${amount}`;
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    min: 0,
+                    ticks: {
+                        callback: function (value, index, ticks) {
+                            return '$' + value;
+                        }
+                    },
+                },
+            }
+        },
+
+    });
+
+
 
 </script>
 
 <script>
-    const nextMonth = () =>{
-            location.href = "@Url.Action("Index", "Insights")" + `?budgetID=${"@(budgetID.ToString())"}&year=${@(nextYear)}&month=${@(nextMonth)}`;
-        }
-        const previousMonth = () =>{
-            location.href = "@Url.Action("Index", "Insights")" + `?budgetID=${"@(budgetID.ToString())"}&year=${@(previousYear)}&month=${@(previousMonth)}`;
-        }
+    const nextMonth = () => {
+        location.href = "@Url.Action("Index", "Insights")" + `?budgetID=${"@(budgetID.ToString())"}&year=${@(nextYear)}&month=${@(nextMonth)}`;
+    }
+    const previousMonth = () => {
+        location.href = "@Url.Action("Index", "Insights")" + `?budgetID=${"@(budgetID.ToString())"}&year=${@(previousYear)}&month=${@(previousMonth)}`;
+    }
 </script>
