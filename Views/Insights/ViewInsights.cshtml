@@ -126,8 +126,6 @@ DateOnly.FromDateTime(transaction.TransactionDate)).OrderBy(x => x.Key).ToList()
             TransactionDate = dateGroupedTransaction.First().TransactionDate,
             Amount = dateGroupedTransaction.Sum(tran => tran.Amount),
         });
-        Console.WriteLine(savingsContributionsByDate.Last().TransactionDate);
-        Console.WriteLine(savingsContributionsByDate.Last().Amount);
     }
 
 
@@ -383,7 +381,6 @@ else
     let addToSavingsCategories =  @Html.Raw(JsonConvert.SerializeObject(addToSavingsByCategory));
     let withdrawFromSavingsCategories =  @Html.Raw(JsonConvert.SerializeObject(withdrawFromSavingsByCategory));
     let savingsContributionsByDate =  @Html.Raw(JsonConvert.SerializeObject(savingsContributionsByDate));
-    console.log(savingsContributionsByDate)
     //expense categories
     var transactionCategoriesCtx = document.getElementById('donutTransactionCategoriesChart').getContext('2d');
     var expenseChart = new Chart(transactionCategoriesCtx, {
