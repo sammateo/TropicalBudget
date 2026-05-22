@@ -56,32 +56,32 @@ string.Empty;
 @* Button row *@
 <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 my-3">
     <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-primary border border-primary"
-           asp-controller="Insights" asp-action="AI" asp-all-route-data="newTransactionRouteData">
+       asp-controller="Insights" asp-action="AI" asp-all-route-data="newTransactionRouteData">
         <span>Today</span>
         <i class="bi bi-calendar-check"></i>
     </a>
     <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-success border border-success"
-           asp-controller="Insights" asp-action="Index" asp-all-route-data="fullTransactionRouteData">
+       asp-controller="Insights" asp-action="Index" asp-all-route-data="fullTransactionRouteData">
         <span>Insights</span>
         <i class="bi bi-graph-up-arrow"></i>
     </a>
     <a id="spendingListButton"
-           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
-           asp-controller="Transaction" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
-           style="cursor:pointer">
-        <span>Budget</span>
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+       asp-controller="Transaction" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+       style="cursor:pointer">
+        <span>Transactions</span>
         <i class="bi bi-card-list"></i>
     </a>
     <a id="planBudgetButton"
-           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
-           asp-controller="Plan" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+       asp-controller="Plan" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
         <span>Plan</span>
         <i class="bi bi-card-checklist"></i>
     </a>
     <a id="savingsGoalsButton"
-           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
-           asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
-           style="cursor:pointer">
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+       asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+       style="cursor:pointer">
         <span>Savings Goals</span>
         <i class="bi bi-piggy-bank"></i>
     </a>
@@ -116,7 +116,7 @@ string.Empty;
                 const insights = JSON.parse(response.message);
                 let insightsHtml = `
                 <div class="row gx-4 gy-4">`
-                
+
                 insights.forEach((insight) => {
                     insightsHtml += `
                     <div class="col-12 col-md-6">
@@ -128,12 +128,12 @@ string.Empty;
                         </div>
                     </div>
                     `})
-                
+
                 insightsHtml += `
                 </div>
                 `
                 $("#ai-insights-container").html(insightsHtml);
-                
+
             },
             error: (xhr, status, error) => {
                 console.log("Error: ", error)

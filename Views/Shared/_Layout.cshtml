@@ -1,6 +1,7 @@
 ﻿@using TropicalBudget.Utilities
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,16 +15,24 @@
     @* @Html.Partial("_Favicons") *@
     <partial name="_Favicons" />
 </head>
+
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
+                @if (Context.Request.Path != "/")
+                {
+                    <button class="border-0 bg-transparent" onclick="window.history.back()">
+
+                        <i class="bi bi-chevron-left fs-4 mx-2"></i>
+                    </button>
+                }
                 <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
                     <img style="width:50px;" src="~/images/logo_transparent.png" />
                     <span>Tropical Budget</span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
@@ -32,25 +41,29 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Category" asp-action="Index">Categories</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Category"
+                               asp-action="Index">Categories</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Sources" asp-action="Index">Sources</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Sources"
+                               asp-action="Index">Sources</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Roadmap" asp-action="Index">Roadmap</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Roadmap"
+                               asp-action="Index">Roadmap</a>
                         </li>
                     </ul>
                     <div class="d-flex gap-2 align-items-center">
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
                             <a asp-area="" asp-controller="Account" asp-action="Profile">
-                                <img class="rounded-circle" style="width:30px" src="@UserUtility.GetUserProfilePhoto(User)" />
+                                <img class="rounded-circle" style="width:30px"
+                                     src="@UserUtility.GetUserProfilePhoto(User)" />
                             </a>
                             <a asp-area="" asp-controller="Account" asp-action="Logout">Logout</a>
-                                        }
-                                        else
-                                        {
+                        }
+                        else
+                        {
                             <a asp-area="" asp-controller="Account" asp-action="Login">Login</a>
                         }
                     </div>
@@ -66,7 +79,7 @@
 
     <footer class="border-top footer text-muted">
         @* <div class="container"> *@
-        @*     &copy; 2025 - Tropical Budget - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> *@
+        @* &copy; 2025 - Tropical Budget - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a> *@
         @* </div> *@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -74,4 +87,60 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>
+
+<script>
+    const savingsContributionBreakdown = $("#savings-contribution-breakdown");
+    const savingsWithdrawalBreakdown = $("#savings-withdrawal-breakdown");
+    const incomeBreakdown = $("#income-breakdown");
+    const incomeSummary = $("#income-summary");
+    const expenseBreakdown = $("#expense-breakdown");
+    const expenseSummary = $("#expense-summary");
+    const expandBtn = $("#expand-btn")
+    let expandedBreakdown = false
+    const expandSavingsContributions = () => {
+    if (expandedBreakdown) {
+    //hide breakdown
+    savingsContributionBreakdown.removeClass("d-flex")
+    savingsContributionBreakdown.addClass("d-none")
+    savingsWithdrawalBreakdown.removeClass("d-flex")
+    savingsWithdrawalBreakdown.addClass("d-none")
+    incomeBreakdown.removeClass("d-block")
+    incomeBreakdown.addClass("d-none")
+    expenseBreakdown.removeClass("d-block")
+    expenseBreakdown.addClass("d-none")
+    //show summary
+    incomeSummary.removeClass("d-none")
+    incomeSummary.addClass("d-block")
+    expenseSummary.removeClass("d-none")
+    expenseSummary.addClass("d-block")
+
+
+    expandedBreakdown = false;
+    expandBtn.html("<i class='bi bi-chevron-bar-down fs-3'></i>")
+
+    } else {
+    //show breakdown
+    savingsContributionBreakdown.removeClass("d-none")
+    savingsContributionBreakdown.addClass("d-flex")
+    savingsWithdrawalBreakdown.removeClass("d-none")
+    savingsWithdrawalBreakdown.addClass("d-flex")
+
+    incomeBreakdown.removeClass("d-none")
+    incomeBreakdown.addClass("d-block")
+    expenseBreakdown.removeClass("d-none")
+    expenseBreakdown.addClass("d-block")
+
+    //hide summary
+    incomeSummary.removeClass("d-block")
+    incomeSummary.addClass("d-none")
+    expenseSummary.removeClass("d-block")
+    expenseSummary.addClass("d-none")
+
+    expandedBreakdown = true;
+    expandBtn.html("<i class='bi bi-chevron-bar-up fs-3'></i>")
+    }
+    }
+
+</script>
