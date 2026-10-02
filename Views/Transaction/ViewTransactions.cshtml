@@ -74,42 +74,49 @@ string.Empty;
 @* Button row *@
 <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 my-3">
     <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-primary border"
-           asp-controller="Transaction" asp-action="New" asp-all-route-data="newTransactionRouteData">
+       asp-controller="Transaction" asp-action="New" asp-all-route-data="newTransactionRouteData">
         <span>Add New Transaction</span>
         <i class="bi bi-plus-circle"></i>
     </a>
     <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-primary border border-primary"
-           asp-controller="Transaction" asp-action="Index" asp-all-route-data="newTransactionRouteData">
+       asp-controller="Transaction" asp-action="Index" asp-all-route-data="newTransactionRouteData">
         <span>Today</span>
         <i class="bi bi-calendar-check"></i>
     </a>
-    
+
     <a id="planBudgetButton"
-           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
-           asp-controller="Plan" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+       asp-controller="Plan" asp-action="Index" asp-all-route-data="fullTransactionRouteData" style="cursor:pointer">
         <span>Plan</span>
         <i class="bi bi-card-checklist"></i>
     </a>
     <a id="savingsGoalsButton"
-           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
-           asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
-           style="cursor:pointer">
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+       asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+       style="cursor:pointer">
         <span>Savings Goals</span>
         <i class="bi bi-piggy-bank"></i>
     </a>
     <a id="spendingListButton"
-           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
-           asp-controller="Insights" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
-           style="cursor:pointer">
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+       asp-controller="Insights" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+       style="cursor:pointer">
         <span>Insights</span>
         <i class="bi bi-graph-up-arrow"></i>
     </a>
     <a id="exportTransactionsButton"
-           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
-           asp-controller="Transaction" asp-action="Export" asp-all-route-data="fullTransactionRouteData"
-           style="cursor:pointer">
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+       asp-controller="Transaction" asp-action="Export" asp-all-route-data="fullTransactionRouteData"
+       style="cursor:pointer">
         <span>Export</span>
         <i class="bi bi-cloud-download"></i>
+    </a>
+    <a id="annualOverviewListButton"
+       class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+       asp-controller="Transaction" asp-action="Annual" asp-all-route-data="fullTransactionRouteData"
+       style="cursor:pointer">
+        <span>Annual Overview</span>
+        <i class="bi bi-card-list"></i>
     </a>
     <button class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn btn-outline-danger border border-danger"
             onclick="onDeleteBudgetClicked()">
@@ -194,7 +201,7 @@ string.Empty;
                 }
             });
     }
-    
+
     const onDeleteBudgetClicked = () => {
         const budget_name = $("#budget_name").val();
         if (confirm(`Are you sure you want to delete budget ${budget_name}?`)) {

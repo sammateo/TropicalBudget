@@ -261,7 +261,7 @@ namespace TropicalBudget.Controllers
             };
 
             var response = await client.Models.GenerateContentAsync(
-                model: "gemini-2.5-flash",
+                model: "gemini-3.5-flash-lite",
                 config: generateContentConfig,
                 contents:
                 $"""

@@ -61,6 +61,59 @@ namespace TropicalBudget.Controllers
 
             return View("ViewTransactions", budgetTransactions);
         }
+        public async Task<IActionResult> Annual(Guid budgetID, int? year, int? month)
+        {
+            if (budgetID == Guid.Empty)
+                return RedirectToAction("Index", "Home");
+            Tuple<Guid, List<Transaction>> budgetTransactions = new(new(), new());
+            try
+            {
+                string userID = UserUtility.GetUserID(User);
+                DateTime currentDate = DateTime.Now;
+                string currentMonth = string.Empty;
+                DateTime startDate;
+                DateTime endDate;
+
+                // used to keep track of the year and month of the transaction before the annual transaction page is viewed
+                DateTime transactionHistoryDate;
+
+                if (year == null || month == null)
+                {
+                    currentMonth = $"{currentDate.ToString("MMMM")}, {currentDate.ToString("yyyy")}";
+                    //get start and end date of the month
+                    startDate = new DateTime(currentDate.Year, 1, 1, 0, 0, 0);
+                    transactionHistoryDate = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0);
+                    endDate = startDate.AddMonths(11).AddSeconds(-1);
+                }
+                else
+                {
+                    if (month.Value > 12 || month.Value < 1)
+                    {
+                        return RedirectToAction("Index");
+                    }
+                    startDate = new DateTime(year.Value, 1, 1, 0, 0, 0);
+                    endDate = startDate.AddMonths(11).AddSeconds(-1);
+                    currentMonth = $"{startDate.ToString("MMMM")}, {startDate.ToString("yyyy")}";
+                    transactionHistoryDate = new DateTime(year.Value, month.Value, 1, 0, 0, 0);
+                }
+                TempData["currentMonthString"] = currentMonth;
+                TempData["startDate"] = transactionHistoryDate;
+                Budget budget = await _db.GetBudget(userID, budgetID);
+                TempData["BudgetName"] = budget != null && !string.IsNullOrWhiteSpace(budget.Name) ? budget.Name : "Unknown";
+                List<Transaction> transactions = await _db.GetTransactions(budgetID, startDate, endDate);
+                List<TransactionCategory> transactionCategories = await _db.GetTransactionCategories(userID);
+                TempData["TransactionCategories"] = transactionCategories;
+                List<SavingsGoal> savingsGoals = await _db.GetSavingsGoals(budgetID);
+                TempData["SavingsGoals"] = savingsGoals;
+                budgetTransactions = new(budgetID, transactions);
+            }
+            catch (Exception ex)
+            {
+                SentrySdk.CaptureException(ex);
+            }
+
+            return View("AnnualTransactions", budgetTransactions);
+        }
 
         public async Task<IActionResult> New(Guid budgetID)
         {
