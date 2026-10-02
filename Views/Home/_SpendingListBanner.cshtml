@@ -17,24 +17,24 @@ TransactionUtility.TRANSACTION_TYPE_EXPENSE).ToList();
 
 <div class="row flex-wrap p-3 justify-content-center align-items-stretch">
     <div class="col-6 col-md-3 d-flex flex-column px-4 py-2 flex-grow-1 border-bottom border-2 border-success">
-        <span id="income-breakdown" class="d-none fw-bold">@($"{incomeAmount:c}")</span>
-        <span id="income-summary" class="d-block fw-bold">@($"{(incomeAmount + savingsWithdrawalAmount):c}")</span>
+        <span id="income-breakdown" class="d-block fw-bold">@($"{incomeAmount:c}")</span>
+        <span id="income-summary" class="d-none fw-bold">@($"{(incomeAmount + savingsWithdrawalAmount):c}")</span>
         <span>Income</span>
     </div>
     <div class="col-6 col-md-3 d-flex flex-column px-4 py-2 flex-grow-1 border-bottom border-2 border-danger">
-        <span id="expense-breakdown" class="d-none fw-bold">@($"{expenseAmount:c}")</span>
-        <span id="expense-summary" class="d-block fw-bold">@($"{(expenseAmount + savingsContributionAmount):c}")</span>
+        <span id="expense-breakdown" class="d-block fw-bold">@($"{expenseAmount:c}")</span>
+        <span id="expense-summary" class="d-none fw-bold">@($"{(expenseAmount + savingsContributionAmount):c}")</span>
         <span>Expenses</span>
     </div>
 
 
     <div id="savings-contribution-breakdown"
-         class="col-6 col-md-3 d-none flex-column px-4 py-2 flex-grow-1 border-bottom border-2 border-success">
+         class="col-6 col-md-3 d-flex flex-column px-4 py-2 flex-grow-1 border-bottom border-2 border-success">
         <span class="fw-bold">@($"{savingsWithdrawalAmount:c}")</span>
         <span>Savings Withdrawals</span>
     </div>
     <div id="savings-withdrawal-breakdown"
-         class="col-6 col-md-3 d-none flex-column px-4 py-2 flex-grow-1 border-bottom border-2 border-danger">
+         class="col-6 col-md-3 d-flex flex-column px-4 py-2 flex-grow-1 border-bottom border-2 border-danger">
         <span class="fw-bold">@($"{savingsContributionAmount:c}")</span>
         <span>Savings Contributions</span>
     </div>
@@ -46,6 +46,6 @@ TransactionUtility.TRANSACTION_TYPE_EXPENSE).ToList();
 </div>
 <div>
     <span id="expand-btn" class="d-flex justify-content-center align-items-center px-4 mt-1 rounded-pill border"
-          onclick="expandSavingsContributions()"><i class="bi bi-chevron-bar-down fs-3"></i></span>
+          onclick="expandSavingsContributions()"><i class="bi bi-chevron-bar-up fs-3"></i></span>
 </div>
 

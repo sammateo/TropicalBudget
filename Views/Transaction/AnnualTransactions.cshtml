@@ -1,0 +1,151 @@
+@using TropicalBudget.Utilities
+@model Tuple<Guid, List<Transaction>>
+
+@{
+    ViewData["Title"] = "Annual Transactions";
+    DateTime startDate = (DateTime)TempData["startDate"];
+    List<TransactionCategory> transactionCategories = (List<TransactionCategory>)TempData["TransactionCategories"];
+    List<SavingsGoal> savingsGoals = (List<SavingsGoal>)TempData["SavingsGoals"];
+    string budgetName = TempData["BudgetName"].ToString();
+
+    List<Transaction> transactions = Model.Item2;
+    Guid budgetID = Model.Item1;
+
+    List<IGrouping<Guid, Transaction>> categoryGroupedTransactions = transactions.OrderByDescending(t =>
+t.TransactionDate).GroupBy(transaction =>
+transaction.CategoryID != Guid.Empty ? transaction.CategoryID : transaction.SavingsGoalID
+).OrderByDescending(g => g.Sum(t => t.Amount)).ToList();
+
+    int previousMonth = startDate.Month;
+    int previousYear = startDate.AddYears(-1).Year;
+    int nextMonth = startDate.Month;
+    int nextYear = startDate.AddYears(1).Year;
+
+    Dictionary<string, string> newTransactionRouteData = new()
+    {
+        {"budgetID", budgetID.ToString()}
+    };
+    Dictionary<string, string> fullTransactionRouteData = new()
+    {
+        {"budgetID", budgetID.ToString()},
+        {"year", startDate.Year.ToString()},
+        {"month", startDate.Month.ToString()},
+    };
+
+}
+
+<div class="text-center">
+    <h2 class="fs-1">Annual Overview: @budgetName</h2>
+    <div class="d-flex justify-content-between align-items-center gap-2 p-1 my-2 rounded-pill">
+        <div onclick="previousYear()" style="cursor:pointer"
+             class="btn-outline-primary border border-primary d-flex align-items-center py-1 px-4 rounded-pill">
+            <i class="bi bi-chevron-left fs-4" style="cursor:pointer"></i>
+            <span class="d-none d-sm-block">@(startDate.AddYears(-1).ToString("yyyy"))</span>
+        </div>
+        <div class="d-flex flex-column gap-2">
+            <p class="fs-5 fw-bold m-0">@startDate.ToString("yyyy")</p>
+            <p class="fs-6 fw-normal m-0 text-uppercase">@(transactions.Count) transactions</p>
+        </div>
+        <div onclick="nextYear()" style="cursor:pointer"
+             class="bg-primary d-flex align-items-center text-white py-1 px-4 rounded-pill">
+            <span class="d-none d-sm-block">@(startDate.AddYears(1).ToString("yyyy"))</span>
+            <i class="bi bi-chevron-right fs-4"></i>
+        </div>
+    </div>
+    <partial name="~/Views/Home/_SpendingListBanner.cshtml" model="transactions" />
+
+    @* Button row *@
+    <div class="d-flex flex-wrap justify-content-end align-items-center gap-2 my-3">
+        <a class="text-decoration-none py-1 px-4 d-block rounded-pill d-flex gap-2 btn btn-outline-primary border border-primary"
+           asp-controller="Transaction" asp-action="Annual" asp-all-route-data="newTransactionRouteData">
+            <span>Today</span>
+            <i class="bi bi-calendar-check"></i>
+        </a>
+        <a id="savingsGoalsButton"
+           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+           asp-controller="SavingsGoals" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+           style="cursor:pointer">
+            <span>Savings Goals</span>
+            <i class="bi bi-piggy-bank"></i>
+        </a>
+        <a id="spendingListButton"
+           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-secondary border border-secondary"
+           asp-controller="Transaction" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+           style="cursor:pointer">
+            <span>Transactions</span>
+            <i class="bi bi-card-list"></i>
+        </a>
+        <a id="planBudgetButton"
+           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+           asp-controller="Plan" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+           style="cursor:pointer">
+            <span>Plan</span>
+            <i class="bi bi-card-checklist"></i>
+        </a>
+        <a id="spendingListButton"
+           class="text-decoration-none py-1 px-4 rounded-pill d-flex gap-2 btn-outline-success border border-success"
+           asp-controller="Insights" asp-action="Index" asp-all-route-data="fullTransactionRouteData"
+           style="cursor:pointer">
+            <span>Insights</span>
+            <i class="bi bi-graph-up-arrow"></i>
+        </a>
+    </div>
+</div>
+
+<div>
+    <div class="accordion my-4">
+        @if (categoryGroupedTransactions != null && categoryGroupedTransactions.Count > 0)
+        {
+            @foreach (var group in categoryGroupedTransactions)
+            {
+                bool isSavingsGoal = savingsGoals.Any(s => s.ID == group.Key);
+                decimal categoryTotal = isSavingsGoal ? TransactionUtility.GetExpenses(group.ToList()) -
+        TransactionUtility.GetIncome(group.ToList()) : TransactionUtility.GetIncome(group.ToList()) -
+        TransactionUtility.GetExpenses(group.ToList());
+                string categoryTotalPrefix = string.Empty;
+                if (categoryTotal > 0)
+                    categoryTotalPrefix = "+";
+
+                    
+                <div class="accordion-item my-2">
+                    <h2 class="accordion-header" id="heading@(group.Key)">
+                        <button class="accordion-button collapsed gap-2" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapse@(group.Key)" aria-expanded="false" aria-controls="collapse@(group.Key)">
+                            <div class="d-flex align-items-center gap-2 flex-grow-1">
+
+                                <span class="rounded-circle"
+                                      style="width:20px; height:20px; background-color: @(transactionCategories.FirstOrDefault(c => c.ID == group.Key)?.Color ?? savingsGoals.FirstOrDefault(s => s.ID == group.Key)?.Color ?? "lightgray"); display:block"></span>
+                                <span>
+                                    @(transactionCategories.FirstOrDefault(c => c.ID == group.Key)?.Name ??
+                                                        savingsGoals.FirstOrDefault(s => s.ID == group.Key)?.Title ?? "Unknown")
+                                    <span style="color: gray; font-size:small;">@(savingsGoals.Any(s => s.ID == group.Key) ? " (savings goal)" : "")</span>
+                                </span>
+
+                                <span class="ms-auto fw-bold fs-5 @(categoryTotal > 0 ? "text-success" : "")">
+                                    @categoryTotalPrefix@($"{categoryTotal:c}")
+                                </span>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="collapse@(group.Key)" class="accordion-collapse collapse" aria-labelledby="heading@(group.Key)">
+                        <div class="accordion-body flex flex-column gap-2">
+                            @foreach (var transaction in group)
+                            {
+                                <partial name="~/Views/Transaction/_AnnualTransactionCard.cshtml" model="transaction" />
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<script>
+    const nextYear = () => {
+        location.href = "@Url.Action("Annual", "Transaction")" + `?budgetID=${"@(budgetID.ToString())"}&year=${@(nextYear)}&month=${@(nextMonth)}`;
+    }
+    const previousYear = () => {
+        location.href = "@Url.Action("Annual", "Transaction")" + `?budgetID=${"@(budgetID.ToString())"}&year=${@(previousYear)}&month=${@(previousMonth)}`;
+    }
+</script>
